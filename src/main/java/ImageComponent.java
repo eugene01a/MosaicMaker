@@ -4,13 +4,14 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 
 public class ImageComponent extends JComponent {
-    private BufferedImage image;
+    private final BufferedImage originalImage;
+    private BufferedImage image; // if user does any modifications apply here
+    private Rectangle bounds; // defines subimage of originalImage
+
     private static final int HANDLE_SIZE = 10;
     private boolean resizing = false;
     private Point dragOffset;
     private Rectangle resizeHandle;
-    private Point initialClick;
-    private Corner activeCorner = Corner.NONE;
 
     private boolean cropMode = false;
     private Rectangle cropRect = null;
@@ -26,8 +27,12 @@ public class ImageComponent extends JComponent {
     }
 
     public ImageComponent(BufferedImage image) {
+        this.originalImage = image;
         this.image = image;
-        setSize(image.getWidth(), image.getHeight());
+        int w=image.getWidth();
+        int h=image.getHeight();
+        this.bounds = new Rectangle(0,0,w,h);
+        setSize(w,h);
 
         enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
 
@@ -51,7 +56,6 @@ public class ImageComponent extends JComponent {
 
                 Rectangle bounds = getBounds();
                 resizeHandle = new Rectangle(bounds.width - HANDLE_SIZE, bounds.height - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
-                initialClick = e.getPoint();
 
                 if (resizeHandle.contains(e.getPoint())) {
                     resizing = true;
@@ -87,12 +91,14 @@ public class ImageComponent extends JComponent {
                     int newWidth = Math.max(20, e.getX());
                     int newHeight = Math.max(20, e.getY());
 
-                    // Maintain aspect ratio
-                    float aspectRatio = (float) image.getWidth() / image.getHeight();
-                    if (newWidth / (float) newHeight > aspectRatio) {
-                        newWidth = (int) (newHeight * aspectRatio);
-                    } else {
-                        newHeight = (int) (newWidth / aspectRatio);
+                    if (image != null && image.getHeight() != 0) {
+                        // Maintain aspect ratio
+                        float aspectRatio = (float) ImageComponent.this.image.getWidth() / ImageComponent.this.image.getHeight();
+                        if (newWidth / (float) newHeight > aspectRatio) {
+                            newWidth = (int) (newHeight * aspectRatio);
+                        } else {
+                            newHeight = (int) (newWidth / aspectRatio);
+                        }
                     }
 
                     setSize(newWidth, newHeight);
@@ -102,7 +108,41 @@ public class ImageComponent extends JComponent {
                     Point parentPoint = SwingUtilities.convertPoint(ImageComponent.this, e.getPoint(), getParent());
                     int x = parentPoint.x - dragOffset.x;
                     int y = parentPoint.y - dragOffset.y;
-                    setLocation(x, y);
+
+                    // Snap to grid
+                    int gridSize = AppDefaults.GRID_SIZE;
+                    int snapThreshold = 10;  // pixels threshold for snapping to other images
+
+                    int snappedX = (x + gridSize / 2) / gridSize * gridSize;
+                    int snappedY = (y + gridSize / 2) / gridSize * gridSize;
+
+                    int width = getWidth();
+                    int height = getHeight();
+
+                    // Snap to other image edges
+                    if (getParent() instanceof ScaledCanvas canvas) {
+                        for (Component comp : canvas.getComponents()) {
+                            if (comp == ImageComponent.this) continue;  // skip self
+
+                            Rectangle r = comp.getBounds();
+
+                            // Check X edges snapping
+                            if (Math.abs(x - r.x) < snapThreshold) snappedX = r.x;
+                            if (Math.abs(x + width - r.x) < snapThreshold) snappedX = r.x - width;
+                            if (Math.abs(x - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width;
+                            if (Math.abs(x + width - (r.x + r.width)) < snapThreshold)
+                                snappedX = r.x + r.width - width;
+
+                            // Check Y edges snapping
+                            if (Math.abs(y - r.y) < snapThreshold) snappedY = r.y;
+                            if (Math.abs(y + height - r.y) < snapThreshold) snappedY = r.y - height;
+                            if (Math.abs(y - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height;
+                            if (Math.abs(y + height - (r.y + r.height)) < snapThreshold)
+                                snappedY = r.y + r.height - height;
+                        }
+                    }
+
+                    setLocation(snappedX, snappedY);
                 }
                 getParent().repaint();
             }
@@ -157,6 +197,42 @@ public class ImageComponent extends JComponent {
                     JMenuItem splitItem = new JMenuItem("Split Image");
                     splitItem.addActionListener(ae -> enterSplitMode());
                     menu.add(splitItem);
+
+                    JMenuItem bringToFront = new JMenuItem("Bring to Front");
+                    bringToFront.addActionListener(ae -> {
+                        Container parent = getParent();
+                        if (parent instanceof ScaledCanvas) {
+                            ((ScaledCanvas) parent).bringToFront(ImageComponent.this);
+                        }
+                    });
+                    menu.add(bringToFront);
+
+                    JMenuItem sendToBack = new JMenuItem("Send to Back");
+                    sendToBack.addActionListener(ae -> {
+                        Container parent = getParent();
+                        if (parent instanceof ScaledCanvas) {
+                            ((ScaledCanvas) parent).sendToBack(ImageComponent.this);
+                        }
+                    });
+                    menu.add(sendToBack);
+
+                    JMenuItem moveForward = new JMenuItem("Move Forward");
+                    moveForward.addActionListener(ae -> {
+                        Container parent = getParent();
+                        if (parent instanceof ScaledCanvas) {
+                            ((ScaledCanvas) parent).moveForward(ImageComponent.this);
+                        }
+                    });
+                    menu.add(moveForward);
+
+                    JMenuItem moveBackward = new JMenuItem("Move Backward");
+                    moveBackward.addActionListener(ae -> {
+                        Container parent = getParent();
+                        if (parent instanceof ScaledCanvas) {
+                            ((ScaledCanvas) parent).moveBackward(ImageComponent.this);
+                        }
+                    });
+                    menu.add(moveBackward);
                     menu.show(ImageComponent.this, e.getX(), e.getY());
                 }
             }
