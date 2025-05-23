@@ -2,37 +2,32 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.RasterFormatException;
 
 public class ImageComponent extends JComponent {
     private BufferedImage image;
-
     private static final int HANDLE_SIZE = 10;
-    private static final int GRID_SIZE = 20;
-    private static final int SNAP_DISTANCE = 10;
-
-    private Point dragStart = null;
-    private Point dragOffsetScreen = null;
-    private Point origComponentScreen = null;
-
     private boolean resizing = false;
+    private Point dragOffset;
+    private Rectangle resizeHandle;
+    private Point initialClick;
     private Corner activeCorner = Corner.NONE;
-
-    private int origX, origY, origW, origH;
 
     private boolean cropMode = false;
     private Rectangle cropRect = null;
     private Point cropStart = null;
 
+    private boolean splitMode = false;
+    private Rectangle splitRect = null;
+    private Point splitStart = null;
     private JPopupMenu cropPopup;
 
     enum Corner {
         NONE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
     }
 
-    public ImageComponent(BufferedImage img) {
-        this.image = img;
-        setSize(img.getWidth(), img.getHeight());
+    public ImageComponent(BufferedImage image) {
+        this.image = image;
+        setSize(image.getWidth(), image.getHeight());
 
         enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
 
@@ -47,18 +42,22 @@ public class ImageComponent extends JComponent {
                     return;
                 }
 
-                activeCorner = getCornerUnderPoint(e.getPoint());
-                resizing = activeCorner != Corner.NONE;
+                if (splitMode) {
+                    splitStart = e.getPoint();
+                    splitRect = new Rectangle(splitStart);
+                    repaint();
+                    return;
+                }
 
-                if (resizing) {
-                    origX = getX();
-                    origY = getY();
-                    origW = getWidth();
-                    origH = getHeight();
+                Rectangle bounds = getBounds();
+                resizeHandle = new Rectangle(bounds.width - HANDLE_SIZE, bounds.height - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
+                initialClick = e.getPoint();
+
+                if (resizeHandle.contains(e.getPoint())) {
+                    resizing = true;
                 } else {
-                    dragStart = e.getPoint();
-                    dragOffsetScreen = e.getLocationOnScreen();
-                    origComponentScreen = getLocationOnScreen();
+                    resizing = false;
+                    dragOffset = e.getPoint();
                 }
             }
 
@@ -75,24 +74,37 @@ public class ImageComponent extends JComponent {
                     }
                     return;
                 }
-
-                if (resizing) {
-                    resizeWithAspect(e);
-                } else {
-                    Point currentMouse = e.getLocationOnScreen();
-                    int dx = currentMouse.x - dragOffsetScreen.x;
-                    int dy = currentMouse.y - dragOffsetScreen.y;
-
-                    int newX = origComponentScreen.x + dx - getParent().getLocationOnScreen().x;
-                    int newY = origComponentScreen.y + dy - getParent().getLocationOnScreen().y;
-
-                    newX = Math.round((float)newX / GRID_SIZE) * GRID_SIZE;
-                    newY = Math.round((float)newY / GRID_SIZE) * GRID_SIZE;
-
-                    Point snapped = getSnappedPosition(newX, newY);
-                    setLocation(snapped.x, snapped.y);
+                if (splitMode && splitStart != null) {
+                    int x = Math.min(splitStart.x, e.getX());
+                    int y = Math.min(splitStart.y, e.getY());
+                    int w = Math.abs(e.getX() - splitStart.x);
+                    int h = Math.abs(e.getY() - splitStart.y);
+                    splitRect.setBounds(x, y, w, h);
+                    repaint();
+                    return;
                 }
-                forwardMouseEventToParent(e);
+                if (resizing) {
+                    int newWidth = Math.max(20, e.getX());
+                    int newHeight = Math.max(20, e.getY());
+
+                    // Maintain aspect ratio
+                    float aspectRatio = (float) image.getWidth() / image.getHeight();
+                    if (newWidth / (float) newHeight > aspectRatio) {
+                        newWidth = (int) (newHeight * aspectRatio);
+                    } else {
+                        newHeight = (int) (newWidth / aspectRatio);
+                    }
+
+                    setSize(newWidth, newHeight);
+                    revalidate();
+                    repaint();
+                } else {
+                    Point parentPoint = SwingUtilities.convertPoint(ImageComponent.this, e.getPoint(), getParent());
+                    int x = parentPoint.x - dragOffset.x;
+                    int y = parentPoint.y - dragOffset.y;
+                    setLocation(x, y);
+                }
+                getParent().repaint();
             }
 
             @Override
@@ -104,6 +116,10 @@ public class ImageComponent extends JComponent {
                     int h = Math.abs(e.getY() - cropStart.y);
                     cropRect.setBounds(x, y, w, h);
                     showCropPopup();
+                }
+
+                if (splitMode && splitRect != null && splitRect.width > 0 && splitRect.height > 0) {
+                    promptSplitRegion();
                 }
             }
 
@@ -123,9 +139,24 @@ public class ImageComponent extends JComponent {
                 if (SwingUtilities.isRightMouseButton(e)) {
                     if (cropMode) return; // disable menu while cropping
                     JPopupMenu menu = new JPopupMenu();
+
                     JMenuItem cropItem = new JMenuItem("Crop Image");
                     cropItem.addActionListener(ae -> enterCropMode());
                     menu.add(cropItem);
+
+                    JMenuItem deleteItem = new JMenuItem("Delete Image");
+                    deleteItem.addActionListener(ae -> {
+                        Container parent = getParent();
+                        if (parent != null) {
+                            parent.remove(ImageComponent.this);
+                            parent.repaint();
+                        }
+                    });
+                    menu.add(deleteItem);
+
+                    JMenuItem splitItem = new JMenuItem("Split Image");
+                    splitItem.addActionListener(ae -> enterSplitMode());
+                    menu.add(splitItem);
                     menu.show(ImageComponent.this, e.getX(), e.getY());
                 }
             }
@@ -177,38 +208,110 @@ public class ImageComponent extends JComponent {
     }
 
     private void performCrop() {
+
         if (cropRect == null || image == null) return;
 
         double scaleX = (double) getWidth() / image.getWidth();
         double scaleY = (double) getHeight() / image.getHeight();
 
-// Crop
+        // Crop
         int x = (int) (cropRect.x * (image.getWidth() / (double) getWidth()));
         int y = (int) (cropRect.y * (image.getHeight() / (double) getHeight()));
         int w = (int) (cropRect.width * (image.getWidth() / (double) getWidth()));
         int h = (int) (cropRect.height * (image.getHeight() / (double) getHeight()));
 
-// Clamp to image bounds
+        // Clamp to image bounds
         x = Math.max(0, Math.min(x, image.getWidth() - 1));
         y = Math.max(0, Math.min(y, image.getHeight() - 1));
         w = Math.max(1, Math.min(w, image.getWidth() - x));
         h = Math.max(1, Math.min(h, image.getHeight() - y));
 
-// Get cropped image
+        // Get cropped image
         BufferedImage cropped = image.getSubimage(x, y, w, h);
         BufferedImage copy = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2 = copy.createGraphics();
         g2.drawImage(cropped, 0, 0, null);
         g2.dispose();
 
-// Replace image, but preserve scale
+        // Replace image, but preserve scale
         image = copy;
         int newW = (int) (w * scaleX);
         int newH = (int) (h * scaleY);
         setSize(newW, newH);
         setBounds(getX(), getY(), newW, newH);
+        ScaledCanvas parent = (ScaledCanvas) getParent();
+        parent.updateOriginalBounds(this, new Rectangle(x,y,w,h));
         repaint();
 
+    }
+
+    private void promptSplitRegion() {
+        JTextField rowsField = new JTextField("2");
+        JTextField colsField = new JTextField("2");
+        JPanel panel = new JPanel(new GridLayout(2, 2));
+        panel.add(new JLabel("Rows:"));
+        panel.add(rowsField);
+        panel.add(new JLabel("Cols:"));
+        panel.add(colsField);
+        int result = JOptionPane.showConfirmDialog(this, panel, "Split Region", JOptionPane.OK_CANCEL_OPTION);
+        if (result == JOptionPane.OK_OPTION) {
+            try {
+                int rows = Integer.parseInt(rowsField.getText());
+                int cols = Integer.parseInt(colsField.getText());
+                performSplit(rows, cols);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Invalid number of rows/columns.");
+            }
+        }
+        exitSplitMode();
+    }
+
+    private void performSplit(int rows, int cols) {
+        if (splitRect == null || image == null || getParent() == null) return;
+
+        double scaleX = (double) image.getWidth() / getWidth();
+        double scaleY = (double) image.getHeight() / getHeight();
+
+        int imgX = (int) (splitRect.x * scaleX);
+        int imgY = (int) (splitRect.y * scaleY);
+        int imgW = (int) (splitRect.width * scaleX);
+        int imgH = (int) (splitRect.height * scaleY);
+
+        int cellW = imgW / cols;
+        int cellH = imgH / rows;
+
+        int screenX = getX() + splitRect.x;
+        int screenY = getY() + splitRect.y;
+        int compW = splitRect.width / cols;
+        int compH = splitRect.height / rows;
+
+        JLayeredPane canvas = (JLayeredPane) getParent();
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                BufferedImage tile = image.getSubimage(imgX + c * cellW, imgY + r * cellH, cellW, cellH);
+                ImageComponent piece = new ImageComponent(tile);
+                piece.setBounds(screenX + c * compW, screenY + r * compH, compW, compH);
+                canvas.add(piece, JLayeredPane.DEFAULT_LAYER);
+            }
+        }
+
+        canvas.remove(this);
+        canvas.repaint();
+    }
+
+    public void enterSplitMode() {
+        splitMode = true;
+        splitRect = null;
+        splitStart = null;
+        repaint();
+    }
+
+    private void exitSplitMode() {
+        splitMode = false;
+        splitRect = null;
+        splitStart = null;
+        repaint();
     }
 
     private void forwardMouseEventToParent(MouseEvent e) {
@@ -232,128 +335,18 @@ public class ImageComponent extends JComponent {
         return Corner.NONE;
     }
 
-    private void resizeWithAspect(MouseEvent e) {
-        int mx = e.getX();
-        int my = e.getY();
-
-        int newX = getX();
-        int newY = getY();
-        int newW = getWidth();
-        int newH = getHeight();
-
-        double aspect = (double) origW / origH;
-
-        switch (activeCorner) {
-            case TOP_LEFT -> {
-                int dx = mx;
-                int dy = my;
-                if (Math.abs(dx) > Math.abs(dy * aspect)) {
-                    dy = (int) (dx / aspect);
-                } else {
-                    dx = (int) (dy * aspect);
-                }
-                newX = origX + dx;
-                newY = origY + dy;
-                newW = origW - dx;
-                newH = origH - dy;
-            }
-            case TOP_RIGHT -> {
-                int dx = mx - origW;
-                int dy = my;
-                if (Math.abs(dx) > Math.abs(dy * aspect)) {
-                    dy = (int) (-dx / aspect);
-                } else {
-                    dx = (int) (-dy * aspect);
-                }
-                newY = origY + dy;
-                newW = origW + dx;
-                newH = origH - dy;
-            }
-            case BOTTOM_LEFT -> {
-                int dx = mx;
-                int dy = my - origH;
-                if (Math.abs(dx) > Math.abs(dy * aspect)) {
-                    dy = (int) (dx / aspect);
-                } else {
-                    dx = (int) (dy * aspect);
-                }
-                newX = origX + dx;
-                newW = origW - dx;
-                newH = origH + dy;
-            }
-            case BOTTOM_RIGHT -> {
-                int dx = mx - origW;
-                int dy = my - origH;
-                if (Math.abs(dx) > Math.abs(dy * aspect)) {
-                    dy = (int) (dx / aspect);
-                } else {
-                    dx = (int) (dy * aspect);
-                }
-                newW = origW + dx;
-                newH = origH + dy;
-            }
-            default -> {}
-        }
-
-        newW = Math.max(newW, 20);
-        newH = Math.max(newH, 20);
-
-        setBounds(newX, newY, newW, newH);
-        repaint();
-    }
-
-    private Point getSnappedPosition(int x, int y) {
-        Rectangle movingBounds = new Rectangle(x, y, getWidth(), getHeight());
-        int snapX = x;
-        int snapY = y;
-
-        for (Component comp : getParent().getComponents()) {
-            if (comp == this || !(comp instanceof ImageComponent)) continue;
-            Rectangle other = comp.getBounds();
-
-            if (Math.abs(movingBounds.x - other.x) <= SNAP_DISTANCE) {
-                snapX = other.x;
-            } else if (Math.abs(movingBounds.x + movingBounds.width - (other.x + other.width)) <= SNAP_DISTANCE) {
-                snapX = other.x + other.width - movingBounds.width;
-            } else if (Math.abs(movingBounds.x + movingBounds.width - other.x) <= SNAP_DISTANCE) {
-                snapX = other.x - movingBounds.width;
-            } else if (Math.abs(movingBounds.x - (other.x + other.width)) <= SNAP_DISTANCE) {
-                snapX = other.x + other.width;
-            }
-
-            if (Math.abs(movingBounds.y - other.y) <= SNAP_DISTANCE) {
-                snapY = other.y;
-            } else if (Math.abs(movingBounds.y + movingBounds.height - (other.y + other.height)) <= SNAP_DISTANCE) {
-                snapY = other.y + other.height - movingBounds.height;
-            } else if (Math.abs(movingBounds.y + movingBounds.height - other.y) <= SNAP_DISTANCE) {
-                snapY = other.y - movingBounds.height;
-            } else if (Math.abs(movingBounds.y - (other.y + other.height)) <= SNAP_DISTANCE) {
-                snapY = other.y + other.height;
-            }
-        }
-
-        return new Point(snapX, snapY);
-    }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        if (image != null) {
-            g.drawImage(image, 0, 0, getWidth(), getHeight(), null);
-        }
+        // Draw image scaled to current size
+        g.drawImage(image, 0, 0, getWidth(), getHeight(), this);
+
+        // Draw resize handle
+        g.setColor(Color.BLACK);
+        g.fillRect(getWidth() - HANDLE_SIZE, getHeight() - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
 
         Graphics2D g2 = (Graphics2D) g;
         g2.setColor(Color.BLACK);
-
-        if (!cropMode) {
-            int w = getWidth();
-            int h = getHeight();
-            g2.fillRect(0, 0, HANDLE_SIZE, HANDLE_SIZE);
-            g2.fillRect(w - HANDLE_SIZE, 0, HANDLE_SIZE, HANDLE_SIZE);
-            g2.fillRect(0, h - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
-            g2.fillRect(w - HANDLE_SIZE, h - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
-        }
-
         if (cropMode && cropRect != null) {
             g2.setColor(new Color(0, 0, 0, 100));
             g2.fillRect(0, 0, getWidth(), getHeight());
@@ -365,5 +358,22 @@ public class ImageComponent extends JComponent {
             g2.setStroke(new BasicStroke(2));
             g2.drawRect(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
         }
+
+        if (splitMode && splitRect != null) {
+            g2.setColor(new Color(0, 0, 0, 100));
+            g2.fillRect(0, 0, getWidth(), getHeight());
+
+            g2.setColor(new Color(255, 255, 255, 150));
+            g2.fillRect(splitRect.x, splitRect.y, splitRect.width, splitRect.height);
+
+            g2.setColor(Color.BLUE);
+            g2.setStroke(new BasicStroke(2));
+            g2.drawRect(splitRect.x, splitRect.y, splitRect.width, splitRect.height);
+        }
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+        return new Dimension(getWidth(), getHeight());
     }
 }
