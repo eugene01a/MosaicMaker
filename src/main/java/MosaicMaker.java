@@ -15,7 +15,6 @@ public class MosaicMaker {
         SwingUtilities.invokeLater(() -> new MosaicMaker().createAndShowGUI());
     }
 
-
     private void createAndShowGUI() {
         frame = new JFrame("Mosaic Maker");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -63,9 +62,10 @@ public class MosaicMaker {
         frame.setVisible(true);
     }
 
-    private void addTopBar(JFrame frame){
+    private void addTopBar(JFrame frame) {
         JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
+        JMenu editMenu = new JMenu("Edit");
         JMenu viewMenu = new JMenu("View");
 
         JMenuItem addItem = new JMenuItem("Add Image");
@@ -76,30 +76,70 @@ public class MosaicMaker {
         saveItem.addActionListener(e -> saveCanvasAsImage());
         fileMenu.add(saveItem);
 
+        JMenuItem deleteItem = new JMenuItem("Delete Image");
+        deleteItem.addActionListener(e -> {
+            ImageComponent selected = canvas.getSelectedImage();
+            if (selected != null) {
+                canvas.remove(selected);
+                canvas.selectImage(null);
+                canvas.repaint();
+            }
+        });
+        deleteItem.setEnabled(false); // Initially disabled
+        editMenu.add(deleteItem);
+
+        JMenuItem splitHorizontally = new JMenuItem("Horizontal Split");
+        splitHorizontally.addActionListener(e -> {
+            ImageComponent selected = canvas.getSelectedImage();
+            if (selected != null) {
+                selected.enterHorizontalSplitMode();
+            }
+        });
+        splitHorizontally.setEnabled(false);
+        editMenu.add(splitHorizontally);
+
+        JMenuItem splitVertically = new JMenuItem("Vertical Split");
+        splitVertically.addActionListener(e -> {
+            ImageComponent selected = canvas.getSelectedImage();
+            if (selected != null) {
+                selected.enterVerticalSplitMode();
+            }
+        });
+        splitVertically.setEnabled(false);
+        editMenu.add(splitVertically);
+
+        JMenuItem cropItem = new JMenuItem("Crop Image");
+        cropItem.addActionListener(e -> {
+            ImageComponent selected = canvas.getSelectedImage();
+            if (selected != null) {
+                selected.enterCropMode();
+            }
+        });
+        cropItem.setEnabled(false);
+        editMenu.add(cropItem);
+
         JMenuItem zoomToFitItem = new JMenuItem("Zoom to Fit");
         zoomToFitItem.addActionListener(e -> zoomToFit());
         viewMenu.add(zoomToFitItem);
 
         menuBar.add(fileMenu);
+        menuBar.add(editMenu);
         menuBar.add(viewMenu);
         frame.setJMenuBar(menuBar);
-
     }
-    private void addBottomBar(JFrame frame){
+
+    private void addBottomBar(JFrame frame) {
         coordLabel = new JLabel("x: 0, y: 0");
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         bottomPanel.add(coordLabel);
         frame.add(bottomPanel, BorderLayout.SOUTH);
     }
 
-private void zoomToFit() {
+    private void zoomToFit() {
         Rectangle contentBounds = canvas.getImagesBounds();
-
         double wFrame = frame.getContentPane().getWidth();
         double hFrame = frame.getContentPane().getHeight();
-
         if (contentBounds.width == 0 || contentBounds.height == 0) return;
-
         double widthScale = wFrame / contentBounds.getWidth();
         double heightScale = hFrame / contentBounds.getHeight();
         double scale = Math.min(widthScale, heightScale);
@@ -120,9 +160,9 @@ private void zoomToFit() {
         Graphics2D g2d = output.createGraphics();
         g2d.translate(-bounds.x, -bounds.y);
         double oldScale = canvas.getScale();
-        canvas.setScale(1.0); // Avoid scaling in image export
+        canvas.setScale(1.0);
         canvas.paintAll(g2d);
-        canvas.setScale(oldScale); // Restore
+        canvas.setScale(oldScale);
         g2d.dispose();
 
         JFileChooser fileChooser = new JFileChooser();
@@ -135,7 +175,6 @@ private void zoomToFit() {
             if (!path.toLowerCase().endsWith(".png")) {
                 fileToSave = new File(path + ".png");
             }
-
             try {
                 ImageIO.write(output, "png", fileToSave);
                 JOptionPane.showMessageDialog(null, "Image saved to: " + fileToSave.getAbsolutePath());
