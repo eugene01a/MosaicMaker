@@ -10,7 +10,8 @@ public class MosaicMaker {
     private JFrame frame;
     private ScaledCanvas canvas;
     private JLabel coordLabel;
-
+    private JPanel bottomBar;
+    private JMenuBar topBar;
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new MosaicMaker().createAndShowGUI());
     }
@@ -19,8 +20,8 @@ public class MosaicMaker {
         frame = new JFrame("Mosaic Maker");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(AppDefaults.FRAME_WIDTH, AppDefaults.FRAME_HEIGHT);
-        addTopBar(frame);
-        addBottomBar(frame);
+        addTopBar();
+        addBottomBar();
 
         canvas = new ScaledCanvas();
         canvas.setLayout(null);
@@ -62,8 +63,8 @@ public class MosaicMaker {
         frame.setVisible(true);
     }
 
-    private void addTopBar(JFrame frame) {
-        JMenuBar menuBar = new JMenuBar();
+    private void addTopBar() {
+        topBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
         JMenu editMenu = new JMenu("Edit");
         JMenu viewMenu = new JMenu("View");
@@ -122,23 +123,26 @@ public class MosaicMaker {
         zoomToFitItem.addActionListener(e -> zoomToFit());
         viewMenu.add(zoomToFitItem);
 
-        menuBar.add(fileMenu);
-        menuBar.add(editMenu);
-        menuBar.add(viewMenu);
-        frame.setJMenuBar(menuBar);
+        topBar.add(fileMenu);
+        topBar.add(editMenu);
+        topBar.add(viewMenu);
+        frame.setJMenuBar(topBar);
     }
 
-    private void addBottomBar(JFrame frame) {
+    private void addBottomBar() {
         coordLabel = new JLabel("x: 0, y: 0");
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.add(coordLabel);
-        frame.add(bottomPanel, BorderLayout.SOUTH);
+        bottomBar = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        bottomBar.add(coordLabel);
+        frame.add(bottomBar, BorderLayout.SOUTH);
     }
 
     private void zoomToFit() {
-        Rectangle contentBounds = canvas.getImagesBounds();
+        Rectangle contentBounds = canvas.getUnscaledImagesBounds();
+        if (contentBounds.x != 0 || contentBounds.y !=0){
+            canvas.shiftUnscaledContentBounds(new Point(-1*contentBounds.x, -1*contentBounds.y));
+        }
         double wFrame = frame.getContentPane().getWidth();
-        double hFrame = frame.getContentPane().getHeight();
+        double hFrame = frame.getContentPane().getHeight() - topBar.getHeight() - bottomBar.getHeight();
         if (contentBounds.width == 0 || contentBounds.height == 0) return;
         double widthScale = wFrame / contentBounds.getWidth();
         double heightScale = hFrame / contentBounds.getHeight();
@@ -148,23 +152,7 @@ public class MosaicMaker {
             canvas.updateChildrenBounds();
         }
     }
-
     private void saveCanvasAsImage() {
-        Rectangle bounds = canvas.getImagesBounds();
-        if (bounds.width == 0 || bounds.height == 0) {
-            JOptionPane.showMessageDialog(null, "Nothing to save.");
-            return;
-        }
-
-        BufferedImage output = new BufferedImage(bounds.width, bounds.height, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = output.createGraphics();
-        g2d.translate(-bounds.x, -bounds.y);
-        double oldScale = canvas.getScale();
-        canvas.setScale(1.0);
-        canvas.paintAll(g2d);
-        canvas.setScale(oldScale);
-        g2d.dispose();
-
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Save Image");
         int userSelection = fileChooser.showSaveDialog(null);
@@ -176,6 +164,7 @@ public class MosaicMaker {
                 fileToSave = new File(path + ".png");
             }
             try {
+                BufferedImage output = canvas.createUnscaledMosaicImage();
                 ImageIO.write(output, "png", fileToSave);
                 JOptionPane.showMessageDialog(null, "Image saved to: " + fileToSave.getAbsolutePath());
             } catch (Exception ex) {
@@ -184,7 +173,6 @@ public class MosaicMaker {
             }
         }
     }
-
     private void selectImageToAdd() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Add Image");
