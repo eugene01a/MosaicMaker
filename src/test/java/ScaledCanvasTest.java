@@ -47,7 +47,7 @@ public class ScaledCanvasTest {
 
         Component comp = canvas.getComponent(0);
 
-        assertTrue(comp instanceof ImageComponent, "Component should be an ImageComponent");
+        assertTrue(comp instanceof ScaledComponent, "Component should be an ImageComponent");
         assertEquals(imageWidth, comp.getWidth(), "Initial Component Width should match the original image");
         assertEquals(imageHeight, comp.getHeight(), "Initial Component Height should match the original image");
     }

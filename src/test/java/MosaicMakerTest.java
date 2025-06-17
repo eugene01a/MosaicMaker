@@ -20,13 +20,13 @@ public class MosaicMakerTest {
     private Method zoomToFitMethod;
     private Field topBarField;
     private Field bottomBarField;
-    private Frame frame;
+    private JFrame frame;
     private JMenuBar topBar;
     private JPanel bottomBar;
     private ScaledCanvas canvas;
 
     public Dimension getFrameDimensions(){
-        return new Dimension(frame.getWidth(), frame.getHeight() - topBar.getHeight() - bottomBar.getHeight());
+        return new Dimension(frame.getContentPane().getWidth(), frame.getHeight() - topBar.getHeight() - bottomBar.getHeight());
     }
     public Dimension scaleDimension(Dimension d, double scale){
         return new Dimension((int) (d.getWidth() * scale), (int) (d.getHeight() * scale));
@@ -108,8 +108,8 @@ public class MosaicMakerTest {
         // Get ImageComponent
         Component[] components = canvas.getComponents();
         assertEquals(1, components.length, "Canvas should contain 1 component");
-        assertTrue(components[0] instanceof ImageComponent, "Component should be ImageComponent");
-        ImageComponent ic = (ImageComponent) components[0];
+        assertTrue(components[0] instanceof ScaledComponent, "Component should be ImageComponent");
+        ScaledComponent ic = (ScaledComponent) components[0];
 
         // Compute expected scale and preferred size
         Container contentPane = (Container) getContentPaneMethod.invoke(frame);
@@ -142,7 +142,7 @@ public class MosaicMakerTest {
 
         // Get ImageComponent
         Dimension expectedDim1 = computeZoomToFitDimensions(d1);
-        ImageComponent ic1 = (ImageComponent) canvas.getComponent(0);
+        ScaledComponent ic1 = (ScaledComponent) canvas.getComponent(0);
         Dimension ic1Size = ic1.getSize();
         assertEquals(expectedDim1, ic1Size);
 
@@ -154,7 +154,7 @@ public class MosaicMakerTest {
         Component[] components = canvas.getComponents();
         assertEquals(2, components.length, "Canvas should contain 2 component");
         Dimension expectedDim2 = scaleDimension(d2, expectedScale);
-        ImageComponent ic2 = (ImageComponent) components[0];
+        ScaledComponent ic2 = (ScaledComponent) components[0];
         Dimension ic2Size = ic2.getSize();
         assertEquals(expectedDim2, ic2Size);
 
@@ -175,10 +175,10 @@ public class MosaicMakerTest {
         File testFile2 = createTestImage(d2);
 
         canvas.addImageToCanvas(testFile1);
-        ImageComponent ic1 = (ImageComponent) canvas.getComponents()[0];
+        ScaledComponent ic1 = (ScaledComponent) canvas.getComponents()[0];
         canvas.addImageToCanvas(testFile2);
-        ImageComponent ic2 = (ImageComponent) canvas.getComponents()[0];
-        ic2.setUnscaledImageLocation(new Point(ic1.getX()+ic1.getWidth(),ic1.getY()));
+        ScaledComponent ic2 = (ScaledComponent) canvas.getComponents()[0];
+        ic2.setImageLocation(new Point(ic1.getX()+ic1.getWidth(),ic1.getY()));
         zoomToFitMethod.invoke(maker);
         Point expectedLocation2 = new Point((ic1.getX()+ic1.getWidth()),ic1.getY());
         assertEquals(ic2.getLocation(),expectedLocation2);

@@ -79,10 +79,10 @@ public class MosaicMaker {
 
         JMenuItem deleteItem = new JMenuItem("Delete Image");
         deleteItem.addActionListener(e -> {
-            ImageComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedImage();
             if (selected != null) {
                 canvas.remove(selected);
-                canvas.selectImage(null);
+                canvas.selectComponent(null);
                 canvas.repaint();
             }
         });
@@ -91,7 +91,7 @@ public class MosaicMaker {
 
         JMenuItem splitHorizontally = new JMenuItem("Horizontal Split");
         splitHorizontally.addActionListener(e -> {
-            ImageComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedImage();
             if (selected != null) {
                 selected.enterHorizontalSplitMode();
             }
@@ -101,7 +101,7 @@ public class MosaicMaker {
 
         JMenuItem splitVertically = new JMenuItem("Vertical Split");
         splitVertically.addActionListener(e -> {
-            ImageComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedImage();
             if (selected != null) {
                 selected.enterVerticalSplitMode();
             }
@@ -111,7 +111,7 @@ public class MosaicMaker {
 
         JMenuItem cropItem = new JMenuItem("Crop Image");
         cropItem.addActionListener(e -> {
-            ImageComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedImage();
             if (selected != null) {
                 selected.enterCropMode();
             }
