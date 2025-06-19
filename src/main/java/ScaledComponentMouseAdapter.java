@@ -189,7 +189,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         Dimension newScaledDim = computeNewScaledDimensions(e);
         double scale = (double) newScaledDim.width / oldScaledWidth;
 
-        // Scale the unscaled image bounds
+        // Scale the image component bounds
         Rectangle unscaledBounds = scaledComponent.getImageBounds();
         int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
         int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);

@@ -54,7 +54,7 @@ public class ScaledCanvas extends JLayeredPane {
         repaint();
     }
 
-    public ScaledComponent getSelectedImage() {
+    public ScaledComponent getSelectedComponent() {
         return selectedComponent;
     }
 

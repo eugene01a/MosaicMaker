@@ -23,7 +23,44 @@ public class MosaicMaker {
         addTopBar();
         addBottomBar();
 
-        canvas = new ScaledCanvas();
+        canvas = new ScaledCanvas();canvas.addMouseWheelListener(new MouseWheelListener() {
+            @Override
+            public void mouseWheelMoved(MouseWheelEvent e) {
+                double zoomFactor = 1.1;
+                double currentScale = canvas.getScale();
+
+                if (e.getPreciseWheelRotation() < 0) {
+                    // Scroll up = zoom in
+                    currentScale *= zoomFactor;
+                } else {
+                    // Scroll down = zoom out
+                    currentScale /= zoomFactor;
+                }
+
+                canvas.setScale(currentScale);
+                canvas.updateChildrenBounds();
+                canvas.repaint();
+            }
+        });
+
+
+        canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteSelectedImage");
+        canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteSelectedImage");
+
+        canvas.getActionMap().put("deleteSelectedImage", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                ScaledComponent selected = canvas.getSelectedComponent();
+                if (selected != null) {
+                    canvas.remove(selected);
+                    canvas.selectComponent(null);
+                    canvas.repaint();
+                }
+            }
+        });
+
         canvas.setLayout(null);
 
         frame.add(canvas, BorderLayout.CENTER);
@@ -79,7 +116,7 @@ public class MosaicMaker {
 
         JMenuItem deleteItem = new JMenuItem("Delete Image");
         deleteItem.addActionListener(e -> {
-            ScaledComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedComponent();
             if (selected != null) {
                 canvas.remove(selected);
                 canvas.selectComponent(null);
@@ -91,7 +128,7 @@ public class MosaicMaker {
 
         JMenuItem splitHorizontally = new JMenuItem("Horizontal Split");
         splitHorizontally.addActionListener(e -> {
-            ScaledComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedComponent();
             if (selected != null) {
                 selected.enterHorizontalSplitMode();
             }
@@ -101,7 +138,7 @@ public class MosaicMaker {
 
         JMenuItem splitVertically = new JMenuItem("Vertical Split");
         splitVertically.addActionListener(e -> {
-            ScaledComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedComponent();
             if (selected != null) {
                 selected.enterVerticalSplitMode();
             }
@@ -111,7 +148,7 @@ public class MosaicMaker {
 
         JMenuItem cropItem = new JMenuItem("Crop Image");
         cropItem.addActionListener(e -> {
-            ScaledComponent selected = canvas.getSelectedImage();
+            ScaledComponent selected = canvas.getSelectedComponent();
             if (selected != null) {
                 selected.enterCropMode();
             }
