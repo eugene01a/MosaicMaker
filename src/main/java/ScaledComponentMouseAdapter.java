@@ -221,13 +221,6 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         if (scaledComponent.getResizingCorner() == Corner.TOP_LEFT) {
             Rectangle newbounds = computeTLResizedBounds(e);
             scaledComponent.setBounds(newbounds);
-//          TODO the br coordinates keep changing even if supposed to be static
-            System.out.println(
-                    scaledComponent.getX()+scaledComponent.getWidth()
-            );
-            System.out.println(
-                    scaledComponent.getY()+scaledComponent.getHeight()
-            );
         }
         else {
             Dimension newDim = computeBRResizedDim(e);
@@ -240,33 +233,16 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
     public Rectangle computeTLResizedBounds(MouseEvent e) {
         float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();
 
-        int rawNewWidth, rawNewHeight;
+        // Convert current mouse point to parent coordinates
+        Point current = SwingUtilities.convertPoint(scaledComponent, e.getPoint(), scaledComponent.getParent());
+        Point start = scaledComponent.getResizingStart();
+        Dimension originalSize = scaledComponent.getResizeStartSize();
 
-        // Raw mouse input
-        /**
-         * original 4 corners are:
-         * (x1,y1) (x1+w1,y1)
-         * (x1,y1+h1) (x1+w1,y1+h1)
-         *
-         * new corners will be:
-         * (x2,y2) (x2+w2, y2)
-         * (x2,y2+h2) (x2+w2,y2+h2)
-         *
-         * Bottom Right stay the same
-         * (x1+w1,y1+h1) = (x2+w2,y2+h2)
-         * w2 = x1+w1-x2
-         * h2 = y1+h1-y2
-         */
+        // Calculate new raw dimensions assuming bottom-right stays fixed
+        int rawNewWidth = Math.max(20, start.x + originalSize.width - current.x);
+        int rawNewHeight = Math.max(20, start.y + originalSize.height - current.y);
 
-        int x1 = scaledComponent.getResizingStart().x;
-        int y1 = scaledComponent.getResizingStart().y;
-        int x2 = e.getX()+x1;
-        int y2 = e.getY()+y1;
-        int w1 = scaledComponent.getWidth();
-        int h1 = scaledComponent.getHeight();
-        rawNewWidth = Math.max(20, x1+w1-x2);
-        rawNewHeight = Math.max(20, y1+h1-y2);
-        // Adjust for aspect ratio
+        // Enforce aspect ratio
         int newScaledWidth, newScaledHeight;
         if (rawNewWidth / (float) rawNewHeight > aspectRatio) {
             newScaledHeight = rawNewHeight;
@@ -276,8 +252,14 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             newScaledHeight = (int) (rawNewWidth / aspectRatio);
         }
 
-        return new Rectangle(x2, y2, newScaledWidth, newScaledHeight);
+        // Pin the bottom-right corner based on original bounds
+        int newX = start.x + originalSize.width - newScaledWidth;
+        int newY = start.y + originalSize.height - newScaledHeight;
+
+        return new Rectangle(newX, newY, newScaledWidth, newScaledHeight);
     }
+
+
 
     public Dimension computeBRResizedDim(MouseEvent e) {
         float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();

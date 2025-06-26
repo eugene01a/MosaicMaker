@@ -44,7 +44,6 @@ public class MosaicMaker {
             }
         });
 
-
         canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteSelectedImage");
         canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)

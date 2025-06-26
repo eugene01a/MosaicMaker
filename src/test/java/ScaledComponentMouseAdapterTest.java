@@ -13,9 +13,11 @@ class ScaledComponentMouseAdapterTest {
     private void resizeSC(ScaledComponent sc, int x1, int y1, int x2, int y2){
         ScaledComponentMouseAdapter adapter = new ScaledComponentMouseAdapter(sc);
 
-        // Convert from parent to component coordinate
+        // PRESS at x1,y1 in parent → convert to component-local
         int pressX = x1 - sc.getX();
         int pressY = y1 - sc.getY();
+
+        // DRAG to x2,y2 in parent → simulate mouse moving to local point
         int relX = x2 - sc.getX();
         int relY = y2 - sc.getY();
 
@@ -69,9 +71,10 @@ class ScaledComponentMouseAdapterTest {
         canvas = new ScaledCanvas();
         canvas.add(sc);
         sc.setLocation(new Point(10,10));
-        resizeSC(sc,sc.getWidth()-1, sc.getHeight()-1, 200,200);
+        resizeSC(sc, sc.getX() + sc.getWidth() - 1, sc.getY() + sc.getHeight() - 1, 210, 210);
         Rectangle expectedUnscaledBounds = new Rectangle(10, 10, 200, 200);
-        assertEquals(expectedUnscaledBounds, sc.getImageBounds());
+        assertEquals(new Point(10, 10), sc.getLocation());
+        assertEquals(new Dimension(200, 200), sc.getImageBounds().getSize());
     }
     @Test
     void testResizeTopLeft() {
