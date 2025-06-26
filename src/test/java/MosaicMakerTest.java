@@ -101,14 +101,14 @@ public class MosaicMakerTest {
         int img1H = 200;
 
         File testFile1 = createTestImage(new Dimension(img1W, img1H));
-        assertTrue(canvas instanceof ScaledCanvas, "Canvas must be a ScaledCanvas");
+        assertInstanceOf(ScaledCanvas.class, canvas, "Canvas must be a ScaledCanvas");
         canvas.addImageToCanvas(testFile1);
         zoomToFitMethod.invoke(maker);
 
         // Get ImageComponent
         Component[] components = canvas.getComponents();
         assertEquals(1, components.length, "Canvas should contain 1 component");
-        assertTrue(components[0] instanceof ScaledComponent, "Component should be ImageComponent");
+        assertInstanceOf(ScaledComponent.class, components[0], "Component should be ImageComponent");
         ScaledComponent ic = (ScaledComponent) components[0];
 
         // Compute expected scale and preferred size

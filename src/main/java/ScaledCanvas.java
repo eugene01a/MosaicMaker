@@ -64,8 +64,7 @@ public class ScaledCanvas extends JLayeredPane {
         while (parent != null && !(parent instanceof JFrame)) {
             parent = parent.getParent();
         }
-        if (parent instanceof JFrame) {
-            JFrame frame = (JFrame) parent;
+        if (parent instanceof JFrame frame) {
             JMenuBar menuBar = frame.getJMenuBar();
             if (menuBar != null) {
                 for (int i = 0; i < menuBar.getMenuCount(); i++) {
@@ -85,8 +84,7 @@ public class ScaledCanvas extends JLayeredPane {
 
     public void updateChildrenBounds() {
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent) {
-                ScaledComponent ic = (ScaledComponent) comp;
+            if (comp instanceof ScaledComponent ic) {
                 Rectangle origBounds = ic.getImageBounds();
                 int newX = (int) (origBounds.x * scale);
                 int newY = (int) (origBounds.y * scale);
@@ -112,8 +110,7 @@ public class ScaledCanvas extends JLayeredPane {
     public Rectangle getUnscaledImagesBounds() {
         Rectangle bounds = null;
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent) {
-                ScaledComponent ic = (ScaledComponent) comp;
+            if (comp instanceof ScaledComponent ic) {
                 Rectangle ic_bounds = ic.getImageBounds();
                 if (bounds == null) {
                     bounds = ic_bounds;
@@ -165,8 +162,7 @@ public class ScaledCanvas extends JLayeredPane {
 
     public void shiftUnscaledContentBounds(Point unscaledLocation) {
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent) {
-                ScaledComponent ic = (ScaledComponent) comp;
+            if (comp instanceof ScaledComponent ic) {
                 Rectangle origBounds = ic.getImageBounds();
                 int newX = origBounds.x + unscaledLocation.x;
                 int newY = origBounds.y + unscaledLocation.y;
@@ -183,8 +179,7 @@ public class ScaledCanvas extends JLayeredPane {
         BufferedImage mosaic = new BufferedImage(unscaledBounds.width, unscaledBounds.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = mosaic.createGraphics();
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent) {
-                ScaledComponent ic = (ScaledComponent) comp;
+            if (comp instanceof ScaledComponent ic) {
                 Point location = ic.getImageLocation();
                 g2d.drawImage(ic.resizedImage(), location.x, location.y, null);
             }

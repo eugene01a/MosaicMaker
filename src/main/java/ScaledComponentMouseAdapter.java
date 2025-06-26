@@ -1,9 +1,11 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ScaledComponentMouseAdapter extends MouseAdapter {
     private final ScaledComponent scaledComponent;
+
     public ScaledComponentMouseAdapter(ScaledComponent imageComponent) {
         this.scaledComponent = imageComponent;
     }
@@ -25,14 +27,14 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             }
             return;
         }
-        if (scaledComponent.isVerticalSplitMode()) {
+        else if (scaledComponent.isVerticalSplitMode()) {
             Rectangle lineBounds = new Rectangle(scaledComponent.getVerticalSplitX() - 5, 0, 10, scaledComponent.getHeight());
             if (lineBounds.contains(e.getPoint())) {
                 scaledComponent.setDraggingVerticalSplitLine(true);
             }
             return;
         }
-        if (scaledComponent.isCropMode()) {
+        else if (scaledComponent.isCropMode()) {
             scaledComponent.setCropStart(e.getPoint());
             scaledComponent.setCropRect(new Rectangle(scaledComponent.getCropStart()));
             scaledComponent.repaint();
@@ -40,10 +42,25 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         }
 
         Rectangle bounds = scaledComponent.getBounds();
-        Rectangle resizeHandle = new Rectangle(bounds.width - ScaledComponent.HANDLE_SIZE, bounds.height - ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE);
 
-        if (resizeHandle.contains(e.getPoint())) {
+        // Check resizing
+        Rectangle resizeTopLeftHandle = new Rectangle(0, 0, ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE);
+
+        Rectangle resizeBottomRightHandle = new Rectangle(bounds.width - ScaledComponent.HANDLE_SIZE, bounds.height - ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE);
+
+
+        if (resizeTopLeftHandle.contains(e.getPoint())) {
+            scaledComponent.setResizingCorner(Corner.TOP_LEFT);
             scaledComponent.setResizing(true);
+            scaledComponent.setResizeStartSizeToCurrent();
+            int startX = scaledComponent.getX()+e.getPoint().x;
+            int startY = scaledComponent.getY()+e.getPoint().y;
+            scaledComponent.setResizingStart(new Point(startX, startY));
+
+        } else if (resizeBottomRightHandle.contains(e.getPoint())) {
+            scaledComponent.setResizingCorner(Corner.BOTTOM_RIGHT);
+            scaledComponent.setResizing(true);
+            scaledComponent.setResizingStart(e.getPoint());
             scaledComponent.setResizeStartSizeToCurrent();
         } else {
             // Move mode
@@ -105,14 +122,12 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
                     if (Math.abs(x - r.x) < snapThreshold) snappedX = r.x;
                     if (Math.abs(x + width - r.x) < snapThreshold) snappedX = r.x - width;
                     if (Math.abs(x - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width;
-                    if (Math.abs(x + width - (r.x + r.width)) < snapThreshold)
-                        snappedX = r.x + r.width - width;
+                    if (Math.abs(x + width - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width - width;
 
                     if (Math.abs(y - r.y) < snapThreshold) snappedY = r.y;
                     if (Math.abs(y + height - r.y) < snapThreshold) snappedY = r.y - height;
                     if (Math.abs(y - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height;
-                    if (Math.abs(y + height - (r.y + r.height)) < snapThreshold)
-                        snappedY = r.y + r.height - height;
+                    if (Math.abs(y + height - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height - height;
                 }
             }
 
@@ -145,17 +160,14 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             process_resize_release_event(e);
             scaledComponent.setResizing(false);
         }
-        if (scaledComponent.getStartLocation() != null &&
-                (scaledComponent.getLocation().x != scaledComponent.getStartLocation().x ||
-                scaledComponent.getLocation().y != scaledComponent.getStartLocation().y )
-        ) {
+        if (scaledComponent.getStartLocation() != null && (scaledComponent.getLocation().x != scaledComponent.getStartLocation().x || scaledComponent.getLocation().y != scaledComponent.getStartLocation().y)) {
             // Move mode
             Point start = scaledComponent.getStartLocation();
             Point end = scaledComponent.getLocation();
-            scaledComponent.setUnscaledLocationFromScaledMove(start,end);
+            scaledComponent.setUnscaledLocationFromScaledMove(start, end);
             scaledComponent.setStartLocation(scaledComponent.getLocation());
-            }
-}
+        }
+    }
 
     @Override
     public void mouseMoved(MouseEvent e) {
@@ -164,10 +176,12 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             scaledComponent.repaint();
         }
         if (scaledComponent.isCropMode()) return;
-        ScaledComponent.Corner c = scaledComponent.getCornerUnderPoint(e.getPoint());
+        Corner c = scaledComponent.getCornerUnderPoint(e.getPoint());
         switch (c) {
-            case TOP_LEFT, BOTTOM_RIGHT -> scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
-            case TOP_RIGHT, BOTTOM_LEFT -> scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
+            case TOP_LEFT, BOTTOM_RIGHT ->
+                    scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
+            case TOP_RIGHT, BOTTOM_LEFT ->
+                    scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
             default -> scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         }
     }
@@ -183,28 +197,89 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             }
         }
     }
-    public void process_resize_release_event(MouseEvent e){
-        // Compute uniform scale factor
-        int oldScaledWidth = scaledComponent.getResizeStartSize().width;
-        Dimension newScaledDim = computeNewScaledDimensions(e);
-        double scale = (double) newScaledDim.width / oldScaledWidth;
 
-        // Scale the image component bounds
-        Rectangle unscaledBounds = scaledComponent.getImageBounds();
-        int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
-        int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);
-        Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
-        scaledComponent.setImageDimension(resizedUnscaledDim);
-        scaledComponent.setResizedScale(scale);
+    public void process_resize_release_event(MouseEvent e) {
+        if (scaledComponent.getResizingCorner() == Corner.TOP_LEFT) {
+
+        }
+        else {
+            // Compute uniform scale factor
+            int oldScaledWidth = scaledComponent.getResizeStartSize().width;
+            Dimension newScaledDim = computeBRResizedDim(e);
+            double scale = (double) newScaledDim.width / oldScaledWidth;
+
+            // Scale the image component bounds
+            Rectangle unscaledBounds = scaledComponent.getImageBounds();
+            int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
+            int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);
+            Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
+            scaledComponent.setImageDimension(resizedUnscaledDim);
+            scaledComponent.setResizedScale(scale);
+        }
     }
-    public void process_resize_drag_event(MouseEvent e){
-        Dimension newDim = computeNewScaledDimensions(e);
-        scaledComponent.setSize(newDim.width, newDim.height);
+    public void process_resize_drag_event(MouseEvent e) {
+        if (scaledComponent.getResizingCorner() == Corner.TOP_LEFT) {
+            Rectangle newbounds = computeTLResizedBounds(e);
+            scaledComponent.setBounds(newbounds);
+//          TODO the br coordinates keep changing even if supposed to be static
+            System.out.println(
+                    scaledComponent.getX()+scaledComponent.getWidth()
+            );
+            System.out.println(
+                    scaledComponent.getY()+scaledComponent.getHeight()
+            );
+        }
+        else {
+            Dimension newDim = computeBRResizedDim(e);
+            scaledComponent.setSize(newDim.width, newDim.height);
+        }
         scaledComponent.revalidate();
         scaledComponent.repaint();
     }
 
-    public Dimension computeNewScaledDimensions(MouseEvent e){
+    public Rectangle computeTLResizedBounds(MouseEvent e) {
+        float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();
+
+        int rawNewWidth, rawNewHeight;
+
+        // Raw mouse input
+        /**
+         * original 4 corners are:
+         * (x1,y1) (x1+w1,y1)
+         * (x1,y1+h1) (x1+w1,y1+h1)
+         *
+         * new corners will be:
+         * (x2,y2) (x2+w2, y2)
+         * (x2,y2+h2) (x2+w2,y2+h2)
+         *
+         * Bottom Right stay the same
+         * (x1+w1,y1+h1) = (x2+w2,y2+h2)
+         * w2 = x1+w1-x2
+         * h2 = y1+h1-y2
+         */
+
+        int x1 = scaledComponent.getResizingStart().x;
+        int y1 = scaledComponent.getResizingStart().y;
+        int x2 = e.getX()+x1;
+        int y2 = e.getY()+y1;
+        int w1 = scaledComponent.getWidth();
+        int h1 = scaledComponent.getHeight();
+        rawNewWidth = Math.max(20, x1+w1-x2);
+        rawNewHeight = Math.max(20, y1+h1-y2);
+        // Adjust for aspect ratio
+        int newScaledWidth, newScaledHeight;
+        if (rawNewWidth / (float) rawNewHeight > aspectRatio) {
+            newScaledHeight = rawNewHeight;
+            newScaledWidth = (int) (rawNewHeight * aspectRatio);
+        } else {
+            newScaledWidth = rawNewWidth;
+            newScaledHeight = (int) (rawNewWidth / aspectRatio);
+        }
+
+        return new Rectangle(x2, y2, newScaledWidth, newScaledHeight);
+    }
+
+    public Dimension computeBRResizedDim(MouseEvent e) {
         float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();
         // Raw mouse input
         int rawNewWidth = Math.max(20, e.getX());

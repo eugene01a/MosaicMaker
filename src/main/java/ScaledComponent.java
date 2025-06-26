@@ -6,10 +6,12 @@ public class ScaledComponent extends ImageComponent {
 
     static final int HANDLE_SIZE = 10;
     private boolean resizing = false;
+    private Corner resizingCorner;
+    private Point resizingStart;
     private Point dragOffset;
     private Rectangle resizeHandle;
     private boolean cropMode = false;
-    private boolean moveMode = false;
+    private final boolean moveMode = false;
     private Rectangle cropRect = null;
     private Point cropStart = null;
     private boolean horizontalSplitMode = false;
@@ -24,6 +26,8 @@ public class ScaledComponent extends ImageComponent {
     private Dimension resizeStartSize;
     private Point startLocation;
 
+    public void setResizingStart(Point p){ this.resizingStart = p; }
+    public Point getResizingStart(){ return this.resizingStart; };
     public void setStartLocation(Point p) {
         this.startLocation = p;
     }
@@ -48,10 +52,6 @@ public class ScaledComponent extends ImageComponent {
 
     public Point getStartLocation() {
         return startLocation;
-    }
-
-    enum Corner {
-        NONE, TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
     }
 
     public ScaledComponent(BufferedImage image) {
@@ -82,8 +82,11 @@ public class ScaledComponent extends ImageComponent {
     public boolean isSelected() {
         return selected;
     }
-
+    public Corner getResizingCorner() {
+        return resizingCorner;
+    }
     public void setResizing(boolean resizing) { this.resizing = resizing; }
+    public void setResizingCorner(Corner corner) { this.resizingCorner = corner; }
     public boolean isResizing() { return resizing; }
 
     public void setDragOffset(Point dragOffset) { this.dragOffset = dragOffset; }

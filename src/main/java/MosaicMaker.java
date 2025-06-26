@@ -23,7 +23,8 @@ public class MosaicMaker {
         addTopBar();
         addBottomBar();
 
-        canvas = new ScaledCanvas();canvas.addMouseWheelListener(new MouseWheelListener() {
+        canvas = new ScaledCanvas();
+        canvas.addMouseWheelListener(new MouseWheelListener() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
                 double zoomFactor = 1.1;
