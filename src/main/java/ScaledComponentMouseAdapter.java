@@ -260,7 +260,6 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
     }
 
 
-
     public Dimension computeBRResizedDim(MouseEvent e) {
         float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();
         // Raw mouse input

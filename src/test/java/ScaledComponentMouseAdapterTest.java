@@ -33,17 +33,17 @@ class ScaledComponentMouseAdapterTest {
     }
 
     private void moveSC(ScaledComponent sc, int newX, int newY){
-        ScaledComponentMouseAdapter adapter = new ScaledComponentMouseAdapter(sc);
+            ScaledComponentMouseAdapter adapter = new ScaledComponentMouseAdapter(sc);
 
-        // Mouse press inside the component.
-        Point mousePt = new Point(sc.getWidth()/2, sc.getHeight()/2);
-        MouseEvent mockPressEvent = new MouseEvent(sc, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0,
-                mousePt.x, mousePt.y, 1, false);
-        adapter.mousePressed(mockPressEvent);
+            // Mouse press inside the component.
+            Point mousePt = new Point(sc.getWidth()/2, sc.getHeight()/2);
+            MouseEvent mockPressEvent = new MouseEvent(sc, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), 0,
+                    mousePt.x, mousePt.y, 1, false);
+            adapter.mousePressed(mockPressEvent);
 
-        int deltaX = newX - sc.getX();
-        int deltaY = newY - sc.getY();
-        mousePt.translate(deltaX, deltaY);
+            int deltaX = newX - sc.getX();
+            int deltaY = newY - sc.getY();
+            mousePt.translate(deltaX, deltaY);
         MouseEvent mockDragEvent1 = new MouseEvent(sc, MouseEvent.MOUSE_DRAGGED, System.currentTimeMillis(), 0,
                 mousePt.x, mousePt.y, 1, false);
         adapter.mouseDragged(mockDragEvent1);

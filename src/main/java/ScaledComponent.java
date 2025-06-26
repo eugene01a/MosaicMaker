@@ -332,15 +332,29 @@ public class ScaledComponent extends ImageComponent {
     }
 
     private void performCrop() {
+
         if (cropRect == null || image == null) return;
+        int cropRectX = cropRect.x;
+        int cropRectY = cropRect.y;
+        int cropRectW = cropRect.width;
+        int cropRectH = cropRect.height;
+        if (cropRect.x < 0){
+            cropRectW += cropRect.x;
+            cropRectX = 0;
+        }
+        if (cropRect.y < 0){
+            cropRectH += cropRect.y;
+            cropRectY = 0;
+        }
+
         Point origImageLocation = getImageLocation();
         Point origScaledLocation = getLocation();
         double scaleX = (double) getWidth() / image.getWidth();
         double scaleY = (double) getHeight() / image.getHeight();
-        int x = (int) (cropRect.x * (image.getWidth() / (double) getWidth()));
-        int y = (int) (cropRect.y * (image.getHeight() / (double) getHeight()));
-        int w = (int) (cropRect.width * (image.getWidth() / (double) getWidth()));
-        int h = (int) (cropRect.height * (image.getHeight() / (double) getHeight()));
+        int x = (int) (cropRectX * (image.getWidth() / (double) getWidth()));
+        int y = (int) (cropRectY * (image.getHeight() / (double) getHeight()));
+        int w = (int) (cropRectW * (image.getWidth() / (double) getWidth()));
+        int h = (int) (cropRectH * (image.getHeight() / (double) getHeight()));
 
         // Clamp to image bounds
         x = Math.max(0, Math.min(x, image.getWidth() - 1));
