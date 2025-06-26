@@ -212,23 +212,21 @@ public class ScaledComponent extends ImageComponent {
         // Guard against invalid splits
         if (imgSplitX <= 0 || imgSplitX >= image.getWidth()) return;
 
-        BufferedImage left = image.getSubimage(0, 0, imgSplitX, image.getHeight());
-        BufferedImage right = image.getSubimage(imgSplitX, 0, image.getWidth() - imgSplitX, image.getHeight());
-
-        int leftWidth = splitX;
-        int rightWidth = getWidth() - splitX;
-
+        //Create separate components
         JLayeredPane canvas = (JLayeredPane) getParent();
 
+        BufferedImage left = image.getSubimage(0, 0, imgSplitX, image.getHeight());
         ScaledComponent leftComponent = new ScaledComponent(left);
-        leftComponent.setBounds(getX(), getY(), leftWidth, getHeight());
+        leftComponent.setBounds(getX(), getY(), splitX, getHeight());
         canvas.add(leftComponent, JLayeredPane.DEFAULT_LAYER);
+        leftComponent.setImageLocation(this.getImageLocation());
 
+        BufferedImage right = image.getSubimage(imgSplitX, 0, image.getWidth() - imgSplitX, image.getHeight());
         ScaledComponent rightComponent = new ScaledComponent(right);
-        rightComponent.setBounds(getX() + splitX, getY(), rightWidth, getHeight());
+        rightComponent.setBounds(getX() + splitX, getY(), getWidth() - splitX, getHeight());
+        canvas.add(rightComponent, JLayeredPane.DEFAULT_LAYER);
         rightComponent.setImageLocation(
                 new Point(this.getImageLocation().x + imgSplitX, 0));
-        canvas.add(rightComponent, JLayeredPane.DEFAULT_LAYER);
 
         canvas.remove(this);
         canvas.repaint();
