@@ -178,7 +178,7 @@ public class MosaicMakerTest {
         ScaledComponent sc1 = (ScaledComponent) canvas.getComponents()[0];
         canvas.addImageToCanvas(testFile2);
         ScaledComponent sc2 = (ScaledComponent) canvas.getComponents()[0];
-        sc2.ic.setImageLocation(new Point(sc1.getX()+sc1.getWidth(),sc1.getY()));
+        sc2.ic.setLocation(new Point(sc1.getX()+sc1.getWidth(),sc1.getY()));
         zoomToFitMethod.invoke(maker);
         Point expectedLocation2 = new Point((sc1.getX()+sc1.getWidth()),sc1.getY());
         assertEquals(sc2.getLocation(),expectedLocation2);

@@ -3,36 +3,45 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class ImageComponent extends JComponent {
-    protected BufferedImage image;
+    private BufferedImage image;
     public BufferedImage getImage() { return image; }
     public void setImage(BufferedImage img) { image = img; }
-    protected Rectangle imageBounds;
-    public Rectangle getImageBounds(){
-        return imageBounds;
-    }
-    public Point getImageLocation(){ return imageBounds.getLocation(); }
-    public Dimension getImageDimension(){ return imageBounds.getSize(); }
-    public void setImageDimension(Dimension d){ imageBounds.setSize(d); }
-    public void setImageBounds(Rectangle b){ imageBounds = b; }
-    public void setImageLocation(Point p){ imageBounds.setLocation(p); }
 
     public ImageComponent(BufferedImage image){
         this.image = image;
         Rectangle bounds = new Rectangle(0,0,image.getWidth(), image.getHeight());
-        setImageBounds(bounds);
+        setBounds(bounds);
     }
 
-    public void setUnscaledLocationFromScaledMove(Point scaledStart, Point scaledEnd) {
-        int dx = scaledEnd.x - scaledStart.x;
-        int dy = scaledEnd.y - scaledStart.y;
+    public void crop(int x, int y, int w, int h) {
+        Point origImageLocation = getLocation();
 
-        double scaleX = (double) getWidth() / getImageDimension().width;
-        double scaleY = (double) getHeight() / getImageDimension().height;
+        // Get cropped image
+        BufferedImage cropped = image.getSubimage(x, y, w, h);
+        BufferedImage copy = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2 = copy.createGraphics();
+        g2.drawImage(cropped, 0, 0, null);
+        g2.dispose();
 
-        int unscaledDx = (int) Math.round(dx / scaleX);
-        int unscaledDy = (int) Math.round(dy / scaleY);
-        Point newUnscaledLocation = new Point(imageBounds.x + unscaledDx, imageBounds.y + unscaledDy);
-        setImageLocation(newUnscaledLocation);
+        // Replace image, but preserve scale
+        setImage(copy);
+        setBounds(new Rectangle(origImageLocation.x + x, origImageLocation.y + y, w, h));
     }
 
+    public void setLocationFromScaledMove(Rectangle bounds, Point startLoc) {
+        int dx = bounds.x - startLoc.x;
+        int dy = bounds.y - startLoc.y;
+        double scale = bounds.getWidth() / getWidth();
+        int unscaledDx = (int) Math.round(dx / scale);
+        int unscaledDy = (int) Math.round(dy / scale);
+        Point newUnscaledLocation = new Point(getX() + unscaledDx, getY() + unscaledDy);
+        setLocation(newUnscaledLocation);
+    }
+    public void resize(double scale){
+        Rectangle unscaledBounds = getBounds();
+        int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
+        int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);
+        Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
+        setSize(resizedUnscaledDim);
+    }
 }

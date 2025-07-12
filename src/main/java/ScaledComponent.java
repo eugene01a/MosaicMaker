@@ -58,8 +58,7 @@ public class ScaledComponent extends JComponent {
 
     public ScaledComponent(BufferedImage image) {
         ic = new ImageComponent(image);
-        Rectangle imageBounds = new Rectangle(0,0, image.getWidth(), image.getHeight());
-        setBounds(imageBounds);
+        setBounds(ic.getBounds());
         enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
         ScaledComponentMouseAdapter mouseAdapter = new ScaledComponentMouseAdapter(this);
         addMouseListener(mouseAdapter);
@@ -222,14 +221,14 @@ public class ScaledComponent extends JComponent {
         ScaledComponent leftComponent = new ScaledComponent(left);
         leftComponent.setBounds(getX(), getY(), splitX, getHeight());
         canvas.add(leftComponent, JLayeredPane.DEFAULT_LAYER);
-        leftComponent.ic.setImageLocation(this.ic.getImageLocation());
+        leftComponent.ic.setLocation(this.ic.getLocation());
 
         BufferedImage right = image.getSubimage(imgSplitX, 0, image.getWidth() - imgSplitX, image.getHeight());
         ScaledComponent rightComponent = new ScaledComponent(right);
         rightComponent.setBounds(getX() + splitX, getY(), getWidth() - splitX, getHeight());
         canvas.add(rightComponent, JLayeredPane.DEFAULT_LAYER);
-        rightComponent.ic.setImageLocation(
-                new Point(this.ic.getImageLocation().x + imgSplitX, 0));
+        rightComponent.ic.setLocation(
+                new Point(this.ic.getLocation().x + imgSplitX, 0));
 
         canvas.remove(this);
         canvas.repaint();
@@ -284,8 +283,8 @@ public class ScaledComponent extends JComponent {
 
         ScaledComponent bottomComponent = new ScaledComponent(bottom);
         bottomComponent.setBounds(getX(), getY() + splitY, getWidth(), bottomHeight);
-        bottomComponent.ic.setImageLocation(
-                new Point(0, this.ic.getImageLocation().y + imgSplitY));
+        bottomComponent.ic.setLocation(
+                new Point(0, this.ic.getLocation().y + imgSplitY));
         canvas.add(bottomComponent, JLayeredPane.DEFAULT_LAYER);
 
         canvas.remove(this);
@@ -349,8 +348,6 @@ public class ScaledComponent extends JComponent {
             cropRectY = 0;
         }
 
-        Point origImageLocation = ic.getImageLocation();
-        Point origScaledLocation = getLocation();
         double scaleX = (double) getWidth() / image.getWidth();
         double scaleY = (double) getHeight() / image.getHeight();
         int x = (int) (cropRectX * (image.getWidth() / (double) getWidth()));
@@ -364,23 +361,15 @@ public class ScaledComponent extends JComponent {
         w = Math.max(1, Math.min(w, image.getWidth() - x));
         h = Math.max(1, Math.min(h, image.getHeight() - y));
 
-        // Get cropped image
-        BufferedImage cropped = image.getSubimage(x, y, w, h);
-        BufferedImage copy = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2 = copy.createGraphics();
-        g2.drawImage(cropped, 0, 0, null);
-        g2.dispose();
+        ic.crop(x, y, w, h);
 
-
-        // Replace image, but preserve scale
-        ic.setImage(copy);
         int newW = (int) (w * scaleX);
         int newH = (int) (h * scaleY);
         int newX = (int) (x * scaleX);
         int newY = (int) (y * scaleY);
         setSize(newW, newH);
+        Point origScaledLocation = getLocation();
         setBounds(origScaledLocation.x + newX, origScaledLocation.y + newY, newW, newH);
-        ic.setImageBounds(new Rectangle(origImageLocation.x + x, origImageLocation.y + y, w, h));
         repaint();
     }
 

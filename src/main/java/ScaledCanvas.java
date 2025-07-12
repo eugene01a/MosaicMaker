@@ -85,7 +85,7 @@ public class ScaledCanvas extends JLayeredPane {
     public void updateChildrenBounds() {
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Rectangle origBounds = sc.ic.getImageBounds();
+                Rectangle origBounds = sc.ic.getBounds();
                 int newX = (int) (origBounds.x * scale);
                 int newY = (int) (origBounds.y * scale);
                 int newWidth = (int) (origBounds.getWidth() * scale);
@@ -111,7 +111,7 @@ public class ScaledCanvas extends JLayeredPane {
         Rectangle bounds = null;
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Rectangle ic_bounds = sc.ic.getImageBounds();
+                Rectangle ic_bounds = sc.ic.getBounds();
                 if (bounds == null) {
                     bounds = ic_bounds;
                 } else {
@@ -178,10 +178,10 @@ public class ScaledCanvas extends JLayeredPane {
     public void shiftUnscaledContentBounds(Point unscaledLocation) {
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Rectangle origBounds = sc.ic.getImageBounds();
+                Rectangle origBounds = sc.ic.getBounds();
                 int newX = origBounds.x + unscaledLocation.x;
                 int newY = origBounds.y + unscaledLocation.y;
-                sc.ic.setImageLocation(new Point(newX, newY));
+                sc.ic.setLocation(new Point(newX, newY));
             }
         }
         updatePreferredSize();
@@ -195,7 +195,7 @@ public class ScaledCanvas extends JLayeredPane {
         Graphics2D g2d = mosaic.createGraphics();
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Point location = sc.ic.getImageLocation();
+                Point location = sc.ic.getLocation();
                 g2d.drawImage(sc.resizedImage(), location.x, location.y, null);
             }
         }

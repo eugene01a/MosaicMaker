@@ -6,8 +6,8 @@ import java.awt.event.MouseEvent;
 public class ScaledComponentMouseAdapter extends MouseAdapter {
     private final ScaledComponent sc;
 
-    public ScaledComponentMouseAdapter(ScaledComponent imageComponent) {
-        this.sc = imageComponent;
+    public ScaledComponentMouseAdapter(ScaledComponent scaledComponent) {
+        this.sc = scaledComponent;
     }
 
     @Override
@@ -95,7 +95,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             return;
         }
         if (sc.isResizing()) {
-            if (sc.ic.getImage() != null && sc.ic.getImage().getHeight() != 0) {
+            if (sc.ic != null && sc.ic.getHeight() != 0) {
                 process_resize_drag_event(e);
             }
         } else {
@@ -149,11 +149,12 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             return;
         }
         if (sc.isCropMode()) {
-            int x = Math.min(sc.getCropStart().x, e.getX());
-            int y = Math.min(sc.getCropStart().y, e.getY());
-            int w = Math.abs(e.getX() - sc.getCropStart().x);
-            int h = Math.abs(e.getY() - sc.getCropStart().y);
-            sc.getCropRect().setBounds(x, y, w, h);
+            sc.setCropRect(new Rectangle(
+                    Math.min(sc.getCropStart().x, e.getX()),
+                    Math.min(sc.getCropStart().y, e.getY()),
+                    Math.abs(e.getX() - sc.getCropStart().x),
+                    Math.abs(e.getY() - sc.getCropStart().y)
+            ));
             sc.showCropPopup();
         }
         if (sc.isResizing()) {
@@ -163,8 +164,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         if (sc.getStartLocation() != null && (sc.getLocation().x != sc.getStartLocation().x || sc.getLocation().y != sc.getStartLocation().y)) {
             // Move mode
             Point start = sc.getStartLocation();
-            Point end = sc.getLocation();
-            sc.ic.setUnscaledLocationFromScaledMove(start, end);
+            sc.ic.setLocationFromScaledMove(sc.getBounds(), start);
             sc.setStartLocation(sc.getLocation());
         }
     }
@@ -200,7 +200,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
 
     public void process_resize_release_event(MouseEvent e) {
         if (sc.getResizingCorner() == Corner.TOP_LEFT) {
-
+            //TODO
         }
         else {
             // Compute uniform scale factor
@@ -209,11 +209,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             double scale = (double) newScaledDim.width / oldScaledWidth;
 
             // Scale the image component bounds
-            Rectangle unscaledBounds = sc.ic.getImageBounds();
-            int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
-            int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);
-            Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
-            sc.ic.setImageDimension(resizedUnscaledDim);
+            sc.ic.resize(scale);
             sc.setResizedScale(scale);
         }
     }
@@ -231,7 +227,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
     }
 
     public Rectangle computeTLResizedBounds(MouseEvent e) {
-        float aspectRatio = (float) sc.ic.getImage().getWidth() / sc.ic.getImage().getHeight();
+        float aspectRatio = (float) sc.ic.getWidth() / sc.ic.getHeight();
 
         // Convert current mouse point to parent coordinates
         Point current = SwingUtilities.convertPoint(sc, e.getPoint(), sc.getParent());
@@ -261,7 +257,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
 
 
     public Dimension computeBRResizedDim(MouseEvent e) {
-        float aspectRatio = (float) sc.ic.getImage().getWidth() / sc.ic.getImage().getHeight();
+        float aspectRatio = (float) sc.ic.getWidth() / sc.ic.getHeight();
         // Raw mouse input
         int rawNewWidth = Math.max(20, e.getX());
         int rawNewHeight = Math.max(20, e.getY());

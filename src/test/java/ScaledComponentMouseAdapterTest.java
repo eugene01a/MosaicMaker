@@ -74,7 +74,7 @@ class ScaledComponentMouseAdapterTest {
         resizeSC(sc, sc.getX() + sc.getWidth() - 1, sc.getY() + sc.getHeight() - 1, 210, 210);
         Rectangle expectedUnscaledBounds = new Rectangle(10, 10, 200, 200);
         assertEquals(new Point(10, 10), sc.getLocation());
-        assertEquals(new Dimension(200, 200), sc.ic.getImageBounds().getSize());
+        assertEquals(new Dimension(200, 200), sc.ic.getBounds().getSize());
     }
     @Test
     void testResizeTopLeft() {
