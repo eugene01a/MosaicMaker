@@ -4,44 +4,44 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class ScaledComponentMouseAdapter extends MouseAdapter {
-    private final ScaledComponent scaledComponent;
+    private final ScaledComponent sc;
 
     public ScaledComponentMouseAdapter(ScaledComponent imageComponent) {
-        this.scaledComponent = imageComponent;
+        this.sc = imageComponent;
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        scaledComponent.requestFocusInWindow();
+        sc.requestFocusInWindow();
 
         if (SwingUtilities.isLeftMouseButton(e) || SwingUtilities.isRightMouseButton(e)) {
-            if (scaledComponent.getParent() instanceof ScaledCanvas) {
-                ((ScaledCanvas) scaledComponent.getParent()).selectComponent(scaledComponent);
+            if (sc.getParent() instanceof ScaledCanvas) {
+                ((ScaledCanvas) sc.getParent()).selectComponent(sc);
             }
         }
 
-        if (scaledComponent.isHorizontalSplitMode()) {
-            Rectangle lineBounds = new Rectangle(0, scaledComponent.getHorizontalSplitY() - 5, scaledComponent.getWidth(), 10);
+        if (sc.isHorizontalSplitMode()) {
+            Rectangle lineBounds = new Rectangle(0, sc.getHorizontalSplitY() - 5, sc.getWidth(), 10);
             if (lineBounds.contains(e.getPoint())) {
-                scaledComponent.setDraggingSplitLine(true);
+                sc.setDraggingSplitLine(true);
             }
             return;
         }
-        else if (scaledComponent.isVerticalSplitMode()) {
-            Rectangle lineBounds = new Rectangle(scaledComponent.getVerticalSplitX() - 5, 0, 10, scaledComponent.getHeight());
+        else if (sc.isVerticalSplitMode()) {
+            Rectangle lineBounds = new Rectangle(sc.getVerticalSplitX() - 5, 0, 10, sc.getHeight());
             if (lineBounds.contains(e.getPoint())) {
-                scaledComponent.setDraggingVerticalSplitLine(true);
+                sc.setDraggingVerticalSplitLine(true);
             }
             return;
         }
-        else if (scaledComponent.isCropMode()) {
-            scaledComponent.setCropStart(e.getPoint());
-            scaledComponent.setCropRect(new Rectangle(scaledComponent.getCropStart()));
-            scaledComponent.repaint();
+        else if (sc.isCropMode()) {
+            sc.setCropStart(e.getPoint());
+            sc.setCropRect(new Rectangle(sc.getCropStart()));
+            sc.repaint();
             return;
         }
 
-        Rectangle bounds = scaledComponent.getBounds();
+        Rectangle bounds = sc.getBounds();
 
         // Check resizing
         Rectangle resizeTopLeftHandle = new Rectangle(0, 0, ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE);
@@ -50,59 +50,59 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
 
 
         if (resizeTopLeftHandle.contains(e.getPoint())) {
-            scaledComponent.setResizingCorner(Corner.TOP_LEFT);
-            scaledComponent.setResizing(true);
-            scaledComponent.setResizeStartSizeToCurrent();
-            int startX = scaledComponent.getX()+e.getPoint().x;
-            int startY = scaledComponent.getY()+e.getPoint().y;
-            scaledComponent.setResizingStart(new Point(startX, startY));
+            sc.setResizingCorner(Corner.TOP_LEFT);
+            sc.setResizing(true);
+            sc.setResizeStartSizeToCurrent();
+            int startX = sc.getX()+e.getPoint().x;
+            int startY = sc.getY()+e.getPoint().y;
+            sc.setResizingStart(new Point(startX, startY));
 
         } else if (resizeBottomRightHandle.contains(e.getPoint())) {
-            scaledComponent.setResizingCorner(Corner.BOTTOM_RIGHT);
-            scaledComponent.setResizing(true);
-            scaledComponent.setResizingStart(e.getPoint());
-            scaledComponent.setResizeStartSizeToCurrent();
+            sc.setResizingCorner(Corner.BOTTOM_RIGHT);
+            sc.setResizing(true);
+            sc.setResizingStart(e.getPoint());
+            sc.setResizeStartSizeToCurrent();
         } else {
             // Move mode
-            scaledComponent.setResizing(false);
-            scaledComponent.setDragOffset(e.getPoint());
-            scaledComponent.setStartLocation(scaledComponent.getLocation());
+            sc.setResizing(false);
+            sc.setDragOffset(e.getPoint());
+            sc.setStartLocation(sc.getLocation());
 
         }
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        if (scaledComponent.isHorizontalSplitMode() && scaledComponent.isDraggingSplitLine()) {
-            scaledComponent.setHorizontalSplitY(Math.max(10, Math.min(scaledComponent.getHeight() - 10, e.getY())));
-            scaledComponent.repaint();
+        if (sc.isHorizontalSplitMode() && sc.isDraggingSplitLine()) {
+            sc.setHorizontalSplitY(Math.max(10, Math.min(sc.getHeight() - 10, e.getY())));
+            sc.repaint();
             return;
         }
-        if (scaledComponent.isVerticalSplitMode() && scaledComponent.isDraggingVerticalSplitLine()) {
-            scaledComponent.setVerticalSplitX(Math.max(10, Math.min(scaledComponent.getWidth() - 10, e.getX())));
-            scaledComponent.repaint();
+        if (sc.isVerticalSplitMode() && sc.isDraggingVerticalSplitLine()) {
+            sc.setVerticalSplitX(Math.max(10, Math.min(sc.getWidth() - 10, e.getX())));
+            sc.repaint();
             return;
         }
-        if (scaledComponent.isCropMode()) {
-            if (scaledComponent.getCropStart() != null) {
-                int x = Math.min(scaledComponent.getCropStart().x, e.getX());
-                int y = Math.min(scaledComponent.getCropStart().y, e.getY());
-                int w = Math.abs(e.getX() - scaledComponent.getCropStart().x);
-                int h = Math.abs(e.getY() - scaledComponent.getCropStart().y);
-                scaledComponent.getCropRect().setBounds(x, y, w, h);
-                scaledComponent.repaint();
+        if (sc.isCropMode()) {
+            if (sc.getCropStart() != null) {
+                int x = Math.min(sc.getCropStart().x, e.getX());
+                int y = Math.min(sc.getCropStart().y, e.getY());
+                int w = Math.abs(e.getX() - sc.getCropStart().x);
+                int h = Math.abs(e.getY() - sc.getCropStart().y);
+                sc.getCropRect().setBounds(x, y, w, h);
+                sc.repaint();
             }
             return;
         }
-        if (scaledComponent.isResizing()) {
-            if (scaledComponent.getImage() != null && scaledComponent.getImage().getHeight() != 0) {
+        if (sc.isResizing()) {
+            if (sc.getImage() != null && sc.getImage().getHeight() != 0) {
                 process_resize_drag_event(e);
             }
         } else {
             // Move mode
-            Point parentPoint = SwingUtilities.convertPoint(scaledComponent, e.getPoint(), scaledComponent.getParent());
-            int x = parentPoint.x - scaledComponent.getDragOffset().x;
-            int y = parentPoint.y - scaledComponent.getDragOffset().y;
+            Point parentPoint = SwingUtilities.convertPoint(sc, e.getPoint(), sc.getParent());
+            int x = parentPoint.x - sc.getDragOffset().x;
+            int y = parentPoint.y - sc.getDragOffset().y;
 
             int gridSize = AppDefaults.GRID_SIZE;
             int snapThreshold = 10;
@@ -110,12 +110,12 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             int snappedX = (x + gridSize / 2) / gridSize * gridSize;
             int snappedY = (y + gridSize / 2) / gridSize * gridSize;
 
-            int width = scaledComponent.getWidth();
-            int height = scaledComponent.getHeight();
+            int width = sc.getWidth();
+            int height = sc.getHeight();
 
-            if (scaledComponent.getParent() instanceof ScaledCanvas canvas) {
+            if (sc.getParent() instanceof ScaledCanvas canvas) {
                 for (Component comp : canvas.getComponents()) {
-                    if (comp == scaledComponent) continue;
+                    if (comp == sc) continue;
 
                     Rectangle r = comp.getBounds();
 
@@ -131,112 +131,112 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
                 }
             }
 
-            scaledComponent.setLocation(snappedX, snappedY);
+            sc.setLocation(snappedX, snappedY);
         }
-        scaledComponent.getParent().repaint();
+        sc.getParent().repaint();
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-        if (scaledComponent.isHorizontalSplitMode() && scaledComponent.isDraggingSplitLine()) {
-            scaledComponent.setDraggingSplitLine(false);
-            scaledComponent.confirmHorizontalSplit();
+        if (sc.isHorizontalSplitMode() && sc.isDraggingSplitLine()) {
+            sc.setDraggingSplitLine(false);
+            sc.confirmHorizontalSplit();
             return;
         }
-        if (scaledComponent.isVerticalSplitMode() && scaledComponent.isDraggingVerticalSplitLine()) {
-            scaledComponent.setDraggingVerticalSplitLine(false);
-            scaledComponent.confirmVerticalSplit();
+        if (sc.isVerticalSplitMode() && sc.isDraggingVerticalSplitLine()) {
+            sc.setDraggingVerticalSplitLine(false);
+            sc.confirmVerticalSplit();
             return;
         }
-        if (scaledComponent.isCropMode()) {
-            int x = Math.min(scaledComponent.getCropStart().x, e.getX());
-            int y = Math.min(scaledComponent.getCropStart().y, e.getY());
-            int w = Math.abs(e.getX() - scaledComponent.getCropStart().x);
-            int h = Math.abs(e.getY() - scaledComponent.getCropStart().y);
-            scaledComponent.getCropRect().setBounds(x, y, w, h);
-            scaledComponent.showCropPopup();
+        if (sc.isCropMode()) {
+            int x = Math.min(sc.getCropStart().x, e.getX());
+            int y = Math.min(sc.getCropStart().y, e.getY());
+            int w = Math.abs(e.getX() - sc.getCropStart().x);
+            int h = Math.abs(e.getY() - sc.getCropStart().y);
+            sc.getCropRect().setBounds(x, y, w, h);
+            sc.showCropPopup();
         }
-        if (scaledComponent.isResizing()) {
+        if (sc.isResizing()) {
             process_resize_release_event(e);
-            scaledComponent.setResizing(false);
+            sc.setResizing(false);
         }
-        if (scaledComponent.getStartLocation() != null && (scaledComponent.getLocation().x != scaledComponent.getStartLocation().x || scaledComponent.getLocation().y != scaledComponent.getStartLocation().y)) {
+        if (sc.getStartLocation() != null && (sc.getLocation().x != sc.getStartLocation().x || sc.getLocation().y != sc.getStartLocation().y)) {
             // Move mode
-            Point start = scaledComponent.getStartLocation();
-            Point end = scaledComponent.getLocation();
-            scaledComponent.setUnscaledLocationFromScaledMove(start, end);
-            scaledComponent.setStartLocation(scaledComponent.getLocation());
+            Point start = sc.getStartLocation();
+            Point end = sc.getLocation();
+            sc.setUnscaledLocationFromScaledMove(start, end);
+            sc.setStartLocation(sc.getLocation());
         }
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        if (scaledComponent.isHorizontalSplitMode() && scaledComponent.isDraggingSplitLine()) {
-            scaledComponent.setHorizontalSplitY(Math.max(10, Math.min(scaledComponent.getHeight() - 10, e.getY())));
-            scaledComponent.repaint();
+        if (sc.isHorizontalSplitMode() && sc.isDraggingSplitLine()) {
+            sc.setHorizontalSplitY(Math.max(10, Math.min(sc.getHeight() - 10, e.getY())));
+            sc.repaint();
         }
-        if (scaledComponent.isCropMode()) return;
-        Corner c = scaledComponent.getCornerUnderPoint(e.getPoint());
+        if (sc.isCropMode()) return;
+        Corner c = sc.getCornerUnderPoint(e.getPoint());
         switch (c) {
             case TOP_LEFT, BOTTOM_RIGHT ->
-                    scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
+                    sc.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
             case TOP_RIGHT, BOTTOM_LEFT ->
-                    scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
-            default -> scaledComponent.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                    sc.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
+            default -> sc.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         }
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
         if (SwingUtilities.isRightMouseButton(e)) {
-            if (scaledComponent.isHorizontalSplitMode()) return;
+            if (sc.isHorizontalSplitMode()) return;
 
-            JPopupMenu menu = scaledComponent.buildContextMenu();
+            JPopupMenu menu = sc.buildContextMenu();
             if (menu != null) {
-                menu.show(scaledComponent, e.getX(), e.getY());
+                menu.show(sc, e.getX(), e.getY());
             }
         }
     }
 
     public void process_resize_release_event(MouseEvent e) {
-        if (scaledComponent.getResizingCorner() == Corner.TOP_LEFT) {
+        if (sc.getResizingCorner() == Corner.TOP_LEFT) {
 
         }
         else {
             // Compute uniform scale factor
-            int oldScaledWidth = scaledComponent.getResizeStartSize().width;
+            int oldScaledWidth = sc.getResizeStartSize().width;
             Dimension newScaledDim = computeBRResizedDim(e);
             double scale = (double) newScaledDim.width / oldScaledWidth;
 
             // Scale the image component bounds
-            Rectangle unscaledBounds = scaledComponent.getImageBounds();
+            Rectangle unscaledBounds = sc.getImageBounds();
             int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
             int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);
             Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
-            scaledComponent.setImageDimension(resizedUnscaledDim);
-            scaledComponent.setResizedScale(scale);
+            sc.setImageDimension(resizedUnscaledDim);
+            sc.setResizedScale(scale);
         }
     }
     public void process_resize_drag_event(MouseEvent e) {
-        if (scaledComponent.getResizingCorner() == Corner.TOP_LEFT) {
+        if (sc.getResizingCorner() == Corner.TOP_LEFT) {
             Rectangle newbounds = computeTLResizedBounds(e);
-            scaledComponent.setBounds(newbounds);
+            sc.setBounds(newbounds);
         }
         else {
             Dimension newDim = computeBRResizedDim(e);
-            scaledComponent.setSize(newDim.width, newDim.height);
+            sc.setSize(newDim.width, newDim.height);
         }
-        scaledComponent.revalidate();
-        scaledComponent.repaint();
+        sc.revalidate();
+        sc.repaint();
     }
 
     public Rectangle computeTLResizedBounds(MouseEvent e) {
-        float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();
+        float aspectRatio = (float) sc.getImage().getWidth() / sc.getImage().getHeight();
 
         // Convert current mouse point to parent coordinates
-        Point current = SwingUtilities.convertPoint(scaledComponent, e.getPoint(), scaledComponent.getParent());
-        Point start = scaledComponent.getResizingStart();
-        Dimension originalSize = scaledComponent.getResizeStartSize();
+        Point current = SwingUtilities.convertPoint(sc, e.getPoint(), sc.getParent());
+        Point start = sc.getResizingStart();
+        Dimension originalSize = sc.getResizeStartSize();
 
         // Calculate new raw dimensions assuming bottom-right stays fixed
         int rawNewWidth = Math.max(20, start.x + originalSize.width - current.x);
@@ -261,7 +261,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
 
 
     public Dimension computeBRResizedDim(MouseEvent e) {
-        float aspectRatio = (float) scaledComponent.getImage().getWidth() / scaledComponent.getImage().getHeight();
+        float aspectRatio = (float) sc.getImage().getWidth() / sc.getImage().getHeight();
         // Raw mouse input
         int rawNewWidth = Math.max(20, e.getX());
         int rawNewHeight = Math.max(20, e.getY());

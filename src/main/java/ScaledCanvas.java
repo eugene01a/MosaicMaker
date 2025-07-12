@@ -134,6 +134,21 @@ public class ScaledCanvas extends JLayeredPane {
         return bounds == null ? new Rectangle(0, 0, 0, 0) : bounds;
     }
 
+    public void fitToSize(double wFrame, double hFrame){
+        Rectangle contentBounds = getUnscaledImagesBounds();
+        if (contentBounds.x != 0 || contentBounds.y !=0){
+            shiftUnscaledContentBounds(new Point(-1*contentBounds.x, -1*contentBounds.y));
+        }
+        if (contentBounds.width == 0 || contentBounds.height == 0) return;
+        double widthScale = wFrame / contentBounds.getWidth();
+        double heightScale = hFrame / contentBounds.getHeight();
+        double scale = Math.min(widthScale, heightScale);
+        if (scale != 1.0) {
+            setScale(scale);
+            updateChildrenBounds();
+        }
+    }
+
     public void bringToFront(ScaledComponent imageComponent) {
         this.setComponentZOrder(imageComponent, 0);
         repaint();

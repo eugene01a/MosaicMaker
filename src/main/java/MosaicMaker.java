@@ -24,31 +24,13 @@ public class MosaicMaker {
         addBottomBar();
 
         canvas = new ScaledCanvas();
-        canvas.addMouseWheelListener(new MouseWheelListener() {
-            @Override
-            public void mouseWheelMoved(MouseWheelEvent e) {
-                double zoomFactor = 1.1;
-                double currentScale = canvas.getScale();
-
-                if (e.getPreciseWheelRotation() < 0) {
-                    // Scroll up = zoom in
-                    currentScale *= zoomFactor;
-                } else {
-                    // Scroll down = zoom out
-                    currentScale /= zoomFactor;
-                }
-
-                canvas.setScale(currentScale);
-                canvas.updateChildrenBounds();
-                canvas.repaint();
-            }
-        });
-
+        ScaledCanvasMouseListener handler = new ScaledCanvasMouseListener(canvas, coordLabel);
+        canvas.addMouseWheelListener(handler);
+        canvas.addMouseMotionListener(handler);
         canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0), "deleteSelectedImage");
         canvas.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
                 .put(KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0), "deleteSelectedImage");
-
         canvas.getActionMap().put("deleteSelectedImage", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -64,16 +46,6 @@ public class MosaicMaker {
         canvas.setLayout(null);
 
         frame.add(canvas, BorderLayout.CENTER);
-
-        canvas.addMouseMotionListener(new MouseMotionAdapter() {
-            public void mouseMoved(MouseEvent e) {
-                coordLabel.setText("x: " + (int)(e.getX() / canvas.getScale()) + ", y: " + (int)(e.getY() / canvas.getScale()));
-            }
-
-            public void mouseDragged(MouseEvent e) {
-                coordLabel.setText("x: " + (int)(e.getX() / canvas.getScale()) + ", y: " + (int)(e.getY() / canvas.getScale()));
-            }
-        });
 
         canvas.setTransferHandler(new TransferHandler() {
             public boolean canImport(TransferSupport support) {
@@ -174,20 +146,9 @@ public class MosaicMaker {
     }
 
     private void zoomToFit() {
-        Rectangle contentBounds = canvas.getUnscaledImagesBounds();
-        if (contentBounds.x != 0 || contentBounds.y !=0){
-            canvas.shiftUnscaledContentBounds(new Point(-1*contentBounds.x, -1*contentBounds.y));
-        }
         double wFrame = frame.getContentPane().getWidth();
         double hFrame = frame.getContentPane().getHeight() - topBar.getHeight() - bottomBar.getHeight();
-        if (contentBounds.width == 0 || contentBounds.height == 0) return;
-        double widthScale = wFrame / contentBounds.getWidth();
-        double heightScale = hFrame / contentBounds.getHeight();
-        double scale = Math.min(widthScale, heightScale);
-        if (scale != 1.0) {
-            canvas.setScale(scale);
-            canvas.updateChildrenBounds();
-        }
+        canvas.fitToSize(wFrame, hFrame);
     }
     private void saveCanvasAsImage() {
         JFileChooser fileChooser = new JFileChooser();
