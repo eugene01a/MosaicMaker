@@ -56,11 +56,11 @@ class ScaledComponentMouseAdapterTest {
     @Test
     void testProcessMoveEvent() {
         BufferedImage dummyImage1 = new BufferedImage(100, 100, BufferedImage.TYPE_INT_RGB);
-        ScaledComponent ic1 = new ScaledComponent(dummyImage1);
+        ScaledComponent sc1 = new ScaledComponent(dummyImage1);
         canvas = new ScaledCanvas();
-        canvas.add(ic1);
-        moveSC(ic1,200, 0);
-        assertEquals(new Point(200, 0), ic1.getLocation());
+        canvas.add(sc1);
+        moveSC(sc1,200, 0);
+        assertEquals(new Point(200, 0), sc1.getLocation());
     }
 
     @Test
@@ -74,7 +74,7 @@ class ScaledComponentMouseAdapterTest {
         resizeSC(sc, sc.getX() + sc.getWidth() - 1, sc.getY() + sc.getHeight() - 1, 210, 210);
         Rectangle expectedUnscaledBounds = new Rectangle(10, 10, 200, 200);
         assertEquals(new Point(10, 10), sc.getLocation());
-        assertEquals(new Dimension(200, 200), sc.getImageBounds().getSize());
+        assertEquals(new Dimension(200, 200), sc.ic.getImageBounds().getSize());
     }
     @Test
     void testResizeTopLeft() {

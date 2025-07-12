@@ -175,13 +175,13 @@ public class MosaicMakerTest {
         File testFile2 = createTestImage(d2);
 
         canvas.addImageToCanvas(testFile1);
-        ScaledComponent ic1 = (ScaledComponent) canvas.getComponents()[0];
+        ScaledComponent sc1 = (ScaledComponent) canvas.getComponents()[0];
         canvas.addImageToCanvas(testFile2);
-        ScaledComponent ic2 = (ScaledComponent) canvas.getComponents()[0];
-        ic2.setImageLocation(new Point(ic1.getX()+ic1.getWidth(),ic1.getY()));
+        ScaledComponent sc2 = (ScaledComponent) canvas.getComponents()[0];
+        sc2.ic.setImageLocation(new Point(sc1.getX()+sc1.getWidth(),sc1.getY()));
         zoomToFitMethod.invoke(maker);
-        Point expectedLocation2 = new Point((ic1.getX()+ic1.getWidth()),ic1.getY());
-        assertEquals(ic2.getLocation(),expectedLocation2);
+        Point expectedLocation2 = new Point((sc1.getX()+sc1.getWidth()),sc1.getY());
+        assertEquals(sc2.getLocation(),expectedLocation2);
     }
 
 }

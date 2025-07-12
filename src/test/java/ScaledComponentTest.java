@@ -28,7 +28,7 @@ class ScaledComponentTest {
         performCropMethod.invoke(sc);
 
         // Image should now be resized to (80, 90) as (-20, -10) is clamped to (0,0)
-        BufferedImage cropped = sc.getImage();
+        BufferedImage cropped = sc.ic.getImage();
 
         assertEquals(80, cropped.getWidth(), "Width should adjust by trimming negative x");
         assertEquals(90, cropped.getHeight(), "Height should adjust by trimming negative y");

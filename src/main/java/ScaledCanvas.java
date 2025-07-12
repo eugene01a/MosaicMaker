@@ -84,8 +84,8 @@ public class ScaledCanvas extends JLayeredPane {
 
     public void updateChildrenBounds() {
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent ic) {
-                Rectangle origBounds = ic.getImageBounds();
+            if (comp instanceof ScaledComponent sc) {
+                Rectangle origBounds = sc.ic.getImageBounds();
                 int newX = (int) (origBounds.x * scale);
                 int newY = (int) (origBounds.y * scale);
                 int newWidth = (int) (origBounds.getWidth() * scale);
@@ -110,8 +110,8 @@ public class ScaledCanvas extends JLayeredPane {
     public Rectangle getUnscaledImagesBounds() {
         Rectangle bounds = null;
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent ic) {
-                Rectangle ic_bounds = ic.getImageBounds();
+            if (comp instanceof ScaledComponent sc) {
+                Rectangle ic_bounds = sc.ic.getImageBounds();
                 if (bounds == null) {
                     bounds = ic_bounds;
                 } else {
@@ -177,11 +177,11 @@ public class ScaledCanvas extends JLayeredPane {
 
     public void shiftUnscaledContentBounds(Point unscaledLocation) {
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent ic) {
-                Rectangle origBounds = ic.getImageBounds();
+            if (comp instanceof ScaledComponent sc) {
+                Rectangle origBounds = sc.ic.getImageBounds();
                 int newX = origBounds.x + unscaledLocation.x;
                 int newY = origBounds.y + unscaledLocation.y;
-                ic.setImageLocation(new Point(newX, newY));
+                sc.ic.setImageLocation(new Point(newX, newY));
             }
         }
         updatePreferredSize();
@@ -194,9 +194,9 @@ public class ScaledCanvas extends JLayeredPane {
         BufferedImage mosaic = new BufferedImage(unscaledBounds.width, unscaledBounds.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = mosaic.createGraphics();
         for (Component comp : getComponents()) {
-            if (comp instanceof ScaledComponent ic) {
-                Point location = ic.getImageLocation();
-                g2d.drawImage(ic.resizedImage(), location.x, location.y, null);
+            if (comp instanceof ScaledComponent sc) {
+                Point location = sc.ic.getImageLocation();
+                g2d.drawImage(sc.resizedImage(), location.x, location.y, null);
             }
         }
         g2d.dispose();

@@ -2,8 +2,9 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class ScaledComponent extends ImageComponent {
+public class ScaledComponent extends JComponent {
 
+    ImageComponent ic;
     static final int HANDLE_SIZE = 10;
     private boolean resizing = false;
     private Corner resizingCorner;
@@ -33,6 +34,7 @@ public class ScaledComponent extends ImageComponent {
     }
 
     public BufferedImage resizedImage(){
+        BufferedImage image = ic.getImage();
         if (resizedScale == 1.0) {
             return image;
         } else {
@@ -55,8 +57,8 @@ public class ScaledComponent extends ImageComponent {
     }
 
     public ScaledComponent(BufferedImage image) {
-        super(image);
-        imageBounds = new Rectangle(0,0, image.getWidth(), image.getHeight());
+        ic = new ImageComponent(image);
+        Rectangle imageBounds = new Rectangle(0,0, image.getWidth(), image.getHeight());
         setBounds(imageBounds);
         enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
         ScaledComponentMouseAdapter mouseAdapter = new ScaledComponentMouseAdapter(this);
@@ -204,6 +206,7 @@ public class ScaledComponent extends ImageComponent {
     }
 
     private void performVerticalSplit(int splitX) {
+        BufferedImage image = ic.getImage();
         if (image == null || getParent() == null) return;
 
         double scaleX = (double) image.getWidth() / getWidth();
@@ -219,14 +222,14 @@ public class ScaledComponent extends ImageComponent {
         ScaledComponent leftComponent = new ScaledComponent(left);
         leftComponent.setBounds(getX(), getY(), splitX, getHeight());
         canvas.add(leftComponent, JLayeredPane.DEFAULT_LAYER);
-        leftComponent.setImageLocation(this.getImageLocation());
+        leftComponent.ic.setImageLocation(this.ic.getImageLocation());
 
         BufferedImage right = image.getSubimage(imgSplitX, 0, image.getWidth() - imgSplitX, image.getHeight());
         ScaledComponent rightComponent = new ScaledComponent(right);
         rightComponent.setBounds(getX() + splitX, getY(), getWidth() - splitX, getHeight());
         canvas.add(rightComponent, JLayeredPane.DEFAULT_LAYER);
-        rightComponent.setImageLocation(
-                new Point(this.getImageLocation().x + imgSplitX, 0));
+        rightComponent.ic.setImageLocation(
+                new Point(this.ic.getImageLocation().x + imgSplitX, 0));
 
         canvas.remove(this);
         canvas.repaint();
@@ -259,6 +262,7 @@ public class ScaledComponent extends ImageComponent {
     }
 
     private void performHorizontalSplit(int splitY) {
+        BufferedImage image = ic.getImage();
         if (image == null || getParent() == null) return;
         double scaleY = (double) image.getHeight() / getHeight();
         int imgSplitY = (int) (splitY * scaleY);
@@ -280,8 +284,8 @@ public class ScaledComponent extends ImageComponent {
 
         ScaledComponent bottomComponent = new ScaledComponent(bottom);
         bottomComponent.setBounds(getX(), getY() + splitY, getWidth(), bottomHeight);
-        bottomComponent.setImageLocation(
-                new Point(0, this.getImageLocation().y + imgSplitY));
+        bottomComponent.ic.setImageLocation(
+                new Point(0, this.ic.getImageLocation().y + imgSplitY));
         canvas.add(bottomComponent, JLayeredPane.DEFAULT_LAYER);
 
         canvas.remove(this);
@@ -330,7 +334,7 @@ public class ScaledComponent extends ImageComponent {
     }
 
     private void performCrop() {
-
+        BufferedImage image = ic.getImage();
         if (cropRect == null || image == null) return;
         int cropRectX = cropRect.x;
         int cropRectY = cropRect.y;
@@ -345,7 +349,7 @@ public class ScaledComponent extends ImageComponent {
             cropRectY = 0;
         }
 
-        Point origImageLocation = getImageLocation();
+        Point origImageLocation = ic.getImageLocation();
         Point origScaledLocation = getLocation();
         double scaleX = (double) getWidth() / image.getWidth();
         double scaleY = (double) getHeight() / image.getHeight();
@@ -369,14 +373,14 @@ public class ScaledComponent extends ImageComponent {
 
 
         // Replace image, but preserve scale
-        image = copy;
+        ic.setImage(copy);
         int newW = (int) (w * scaleX);
         int newH = (int) (h * scaleY);
         int newX = (int) (x * scaleX);
         int newY = (int) (y * scaleY);
         setSize(newW, newH);
         setBounds(origScaledLocation.x + newX, origScaledLocation.y + newY, newW, newH);
-        setImageBounds(new Rectangle(origImageLocation.x + x, origImageLocation.y + y, w, h));
+        ic.setImageBounds(new Rectangle(origImageLocation.x + x, origImageLocation.y + y, w, h));
         repaint();
     }
 
@@ -396,6 +400,7 @@ public class ScaledComponent extends ImageComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        BufferedImage image = ic.getImage();
         // Draw image scaled to current size
         g.drawImage(image, 0, 0, getWidth(), getHeight(), this);
 

@@ -5,6 +5,7 @@ import java.awt.image.BufferedImage;
 public class ImageComponent extends JComponent {
     protected BufferedImage image;
     public BufferedImage getImage() { return image; }
+    public void setImage(BufferedImage img) { image = img; }
     protected Rectangle imageBounds;
     public Rectangle getImageBounds(){
         return imageBounds;
@@ -17,6 +18,8 @@ public class ImageComponent extends JComponent {
 
     public ImageComponent(BufferedImage image){
         this.image = image;
+        Rectangle bounds = new Rectangle(0,0,image.getWidth(), image.getHeight());
+        setImageBounds(bounds);
     }
 
     public void setUnscaledLocationFromScaledMove(Point scaledStart, Point scaledEnd) {
