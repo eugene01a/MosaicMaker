@@ -1,3 +1,6 @@
+import mosaicmaker.ScaledCanvas;
+import mosaicmaker.ScaledComponent;
+import mosaicmaker.ScaledComponentMouseAdapter;
 import org.junit.jupiter.api.Test;
 
 import java.awt.*;

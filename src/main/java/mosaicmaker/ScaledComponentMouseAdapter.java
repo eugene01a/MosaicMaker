@@ -1,7 +1,10 @@
+package mosaicmaker;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import static mosaicmaker.AppDefaults.*;
 
 public class ScaledComponentMouseAdapter extends MouseAdapter {
     private final ScaledComponent sc;
@@ -44,9 +47,9 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         Rectangle bounds = sc.getBounds();
 
         // Check resizing
-        Rectangle resizeTopLeftHandle = new Rectangle(0, 0, ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE);
+        Rectangle resizeTopLeftHandle = new Rectangle(0, 0, HANDLE_SIZE, HANDLE_SIZE);
 
-        Rectangle resizeBottomRightHandle = new Rectangle(bounds.width - ScaledComponent.HANDLE_SIZE, bounds.height - ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE, ScaledComponent.HANDLE_SIZE);
+        Rectangle resizeBottomRightHandle = new Rectangle(bounds.width - HANDLE_SIZE, bounds.height - HANDLE_SIZE, HANDLE_SIZE, HANDLE_SIZE);
 
 
         if (resizeTopLeftHandle.contains(e.getPoint())) {

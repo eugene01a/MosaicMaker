@@ -1,4 +1,8 @@
 import static org.junit.jupiter.api.Assertions.*;
+
+import mosaicmaker.MosaicMaker;
+import mosaicmaker.ScaledCanvas;
+import mosaicmaker.ScaledComponent;
 import org.junit.jupiter.api.*;
 
 import java.awt.*;
@@ -101,14 +105,14 @@ public class MosaicMakerTest {
         int img1H = 200;
 
         File testFile1 = createTestImage(new Dimension(img1W, img1H));
-        assertInstanceOf(ScaledCanvas.class, canvas, "Canvas must be a ScaledCanvas");
+        assertInstanceOf(ScaledCanvas.class, canvas, "Canvas must be a mosaicmaker.ScaledCanvas");
         canvas.addImageToCanvas(testFile1);
         zoomToFitMethod.invoke(maker);
 
-        // Get ImageComponent
+        // Get mosaicmaker.ImageComponent
         Component[] components = canvas.getComponents();
         assertEquals(1, components.length, "Canvas should contain 1 component");
-        assertInstanceOf(ScaledComponent.class, components[0], "Component should be ImageComponent");
+        assertInstanceOf(ScaledComponent.class, components[0], "Component should be mosaicmaker.ImageComponent");
         ScaledComponent ic = (ScaledComponent) components[0];
 
         // Compute expected scale and preferred size
@@ -140,7 +144,7 @@ public class MosaicMakerTest {
 
         File testFile2 = createTestImage(d2);
 
-        // Get ImageComponent
+        // Get mosaicmaker.ImageComponent
         Dimension expectedDim1 = computeZoomToFitDimensions(d1);
         ScaledComponent ic1 = (ScaledComponent) canvas.getComponent(0);
         Dimension ic1Size = ic1.getSize();

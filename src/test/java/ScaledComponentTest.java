@@ -1,3 +1,4 @@
+import mosaicmaker.ScaledComponent;
 import org.junit.jupiter.api.Test;
 
 import java.awt.*;

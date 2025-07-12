@@ -2,7 +2,7 @@
 A Java Swing application that allows users to create a mosaics from images. Simply drag image files to the window, crop/resize/split/re-arrange them as needed, and save the output!
 
 ### How to run:
-* Just compile using your favorite build tool and run the main function inside MosaicMaker.java!
+* Just compile using your favorite build tool and run the main function inside mosaicmaker.MosaicMaker.java!
 
 ### Add image:
 1) User can add image by dragging an image file into the window, or selecting File->Add image from top menu. 

@@ -1,3 +1,5 @@
+package mosaicmaker;
+
 import java.awt.event.*;
 import javax.swing.JLabel;
 

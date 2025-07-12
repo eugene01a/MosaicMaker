@@ -1,11 +1,13 @@
+package mosaicmaker;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import static mosaicmaker.AppDefaults.*;
 
 public class ScaledComponent extends JComponent {
 
-    ImageComponent ic;
-    static final int HANDLE_SIZE = 10;
+    public ImageComponent ic;
     private boolean resizing = false;
     private Corner resizingCorner;
     private Point resizingStart;

@@ -1,4 +1,7 @@
 import static org.junit.jupiter.api.Assertions.*;
+
+import mosaicmaker.ScaledCanvas;
+import mosaicmaker.ScaledComponent;
 import org.junit.jupiter.api.*;
 
 import java.awt.image.BufferedImage;
@@ -47,7 +50,7 @@ public class ScaledCanvasTest {
 
         Component comp = canvas.getComponent(0);
 
-        assertInstanceOf(ScaledComponent.class, comp, "Component should be an ImageComponent");
+        assertInstanceOf(ScaledComponent.class, comp, "Component should be an mosaicmaker.ImageComponent");
         assertEquals(imageWidth, comp.getWidth(), "Initial Component Width should match the original image");
         assertEquals(imageHeight, comp.getHeight(), "Initial Component Height should match the original image");
     }

@@ -1,3 +1,5 @@
+package mosaicmaker;
+
 public enum Corner {
     NONE,
     TOP_LEFT,
