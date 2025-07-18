@@ -109,7 +109,7 @@ public class ScaledCanvas extends JLayeredPane {
         }
     }
 
-    public Rectangle getUnscaledImagesBounds() {
+    public Rectangle getAllImageBounds() {
         Rectangle bounds = null;
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
@@ -121,7 +121,7 @@ public class ScaledCanvas extends JLayeredPane {
                 }
             }
         }
-        return bounds == null ? new Rectangle(0, 0, 0, 0) : bounds;
+        return bounds;
     }
 
     public Rectangle getScaledImagesBounds() {
@@ -137,7 +137,7 @@ public class ScaledCanvas extends JLayeredPane {
     }
 
     public void fitToSize(double wFrame, double hFrame){
-        Rectangle contentBounds = getUnscaledImagesBounds();
+        Rectangle contentBounds = getAllImageBounds();
         if (contentBounds.x != 0 || contentBounds.y !=0){
             shiftUnscaledContentBounds(new Point(-1*contentBounds.x, -1*contentBounds.y));
         }
@@ -191,8 +191,8 @@ public class ScaledCanvas extends JLayeredPane {
         repaint();
     }
 
-    public BufferedImage createUnscaledMosaicImage() {
-        Rectangle unscaledBounds = getUnscaledImagesBounds();
+    public BufferedImage createMosaicImage() {
+        Rectangle unscaledBounds = getAllImageBounds();
         BufferedImage mosaic = new BufferedImage(unscaledBounds.width, unscaledBounds.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = mosaic.createGraphics();
         for (Component comp : getComponents()) {

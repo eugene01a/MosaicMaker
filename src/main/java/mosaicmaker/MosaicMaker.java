@@ -164,7 +164,7 @@ public class MosaicMaker {
                 fileToSave = new File(path + ".png");
             }
             try {
-                BufferedImage output = canvas.createUnscaledMosaicImage();
+                BufferedImage output = canvas.createMosaicImage();
                 ImageIO.write(output, "png", fileToSave);
                 JOptionPane.showMessageDialog(null, "Image saved to: " + fileToSave.getAbsolutePath());
             } catch (Exception ex) {
