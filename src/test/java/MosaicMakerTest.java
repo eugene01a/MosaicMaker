@@ -33,7 +33,7 @@ public class MosaicMakerTest {
         return new Dimension(frame.getContentPane().getWidth(), frame.getHeight() - topBar.getHeight() - bottomBar.getHeight());
     }
     public Dimension scaleDimension(Dimension d, double scale){
-        return new Dimension((int) (d.getWidth() * scale), (int) (d.getHeight() * scale));
+        return new Dimension((int)  (d.getWidth() * scale), (int) (d.getHeight() * scale));
     }
     public double computeScale(Dimension originDim, Dimension destDim) {
         double widthScale = destDim.getWidth() / originDim.getWidth();

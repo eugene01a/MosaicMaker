@@ -43,8 +43,8 @@ public class ScaledCanvasMouseListener implements MouseWheelListener, MouseMotio
 
     private void updateCoordinates(MouseEvent e) {
         double scale = canvas.getScale();
-        int x = (int) (e.getX() / scale);
-        int y = (int) (e.getY() / scale);
+        int x = Calc.divideAndRound(e.getX(), scale);
+        int y = Calc.divideAndRound(e.getY(), scale);
         coordLabel.setText("x: " + x + ", y: " + y);
     }
 }

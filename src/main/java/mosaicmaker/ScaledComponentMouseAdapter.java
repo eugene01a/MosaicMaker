@@ -245,10 +245,10 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         int newScaledWidth, newScaledHeight;
         if (rawNewWidth / (float) rawNewHeight > aspectRatio) {
             newScaledHeight = rawNewHeight;
-            newScaledWidth = (int) (rawNewHeight * aspectRatio);
+            newScaledWidth = Calc.multiplyAndRound(rawNewHeight, aspectRatio);
         } else {
             newScaledWidth = rawNewWidth;
-            newScaledHeight = (int) (rawNewWidth / aspectRatio);
+            newScaledHeight = Calc.divideAndRound(rawNewWidth, aspectRatio);
         }
 
         // Pin the bottom-right corner based on original bounds
@@ -269,10 +269,10 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         int newScaledWidth, newScaledHeight;
         if (rawNewWidth / (float) rawNewHeight > aspectRatio) {
             newScaledHeight = rawNewHeight;
-            newScaledWidth = (int) (rawNewHeight * aspectRatio);
+            newScaledWidth = Calc.multiplyAndRound(rawNewHeight, aspectRatio);
         } else {
             newScaledWidth = rawNewWidth;
-            newScaledHeight = (int) (rawNewWidth / aspectRatio);
+            newScaledHeight = Calc.divideAndRound(rawNewWidth, aspectRatio);
         }
         return new Dimension(newScaledWidth, newScaledHeight);
     }

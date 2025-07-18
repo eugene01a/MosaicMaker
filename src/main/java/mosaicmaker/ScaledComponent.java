@@ -40,8 +40,8 @@ public class ScaledComponent extends JComponent {
         if (resizedScale == 1.0) {
             return image;
         } else {
-            int newWidth = (int) (image.getWidth() * resizedScale);
-            int newHeight = (int) (image.getHeight() * resizedScale);
+            int newWidth = Calc.multiplyAndRound(image.getWidth(), resizedScale);
+            int newHeight = Calc.multiplyAndRound(image.getHeight(), resizedScale);
             BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g2d = scaledImage.createGraphics();
 
@@ -211,7 +211,7 @@ public class ScaledComponent extends JComponent {
         if (image == null || getParent() == null) return;
 
         double scaleX = (double) image.getWidth() / getWidth();
-        int imgSplitX = (int) (splitX * scaleX);
+        int imgSplitX = Calc.multiplyAndRound(splitX, scaleX);
 
         // Guard against invalid splits
         if (imgSplitX <= 0 || imgSplitX >= image.getWidth()) return;
@@ -266,7 +266,7 @@ public class ScaledComponent extends JComponent {
         BufferedImage image = ic.getImage();
         if (image == null || getParent() == null) return;
         double scaleY = (double) image.getHeight() / getHeight();
-        int imgSplitY = (int) (splitY * scaleY);
+        int imgSplitY = Calc.multiplyAndRound(splitY, scaleY);
 
         // Guard against invalid splits
         if (imgSplitY <= 0 || imgSplitY >= image.getHeight()) return;
@@ -352,10 +352,10 @@ public class ScaledComponent extends JComponent {
 
         double scaleX = (double) getWidth() / image.getWidth();
         double scaleY = (double) getHeight() / image.getHeight();
-        int x = (int) (cropRectX * (image.getWidth() / (double) getWidth()));
-        int y = (int) (cropRectY * (image.getHeight() / (double) getHeight()));
-        int w = (int) (cropRectW * (image.getWidth() / (double) getWidth()));
-        int h = (int) (cropRectH * (image.getHeight() / (double) getHeight()));
+        int x = Calc.multiplyAndRound(cropRectX, (image.getWidth() / (double) getWidth()));
+        int y = Calc.multiplyAndRound(cropRectY, (image.getHeight() / (double) getHeight()));
+        int w = Calc.multiplyAndRound(cropRectW, (image.getWidth() / (double) getWidth()));
+        int h = Calc.multiplyAndRound(cropRectH, (image.getHeight() / (double) getHeight()));
 
         // Clamp to image bounds
         x = Math.max(0, Math.min(x, image.getWidth() - 1));
@@ -365,10 +365,10 @@ public class ScaledComponent extends JComponent {
 
         ic.crop(x, y, w, h);
 
-        int newW = (int) (w * scaleX);
-        int newH = (int) (h * scaleY);
-        int newX = (int) (x * scaleX);
-        int newY = (int) (y * scaleY);
+        int newW = Calc.multiplyAndRound(w, scaleX);
+        int newH = Calc.multiplyAndRound(h, scaleY);
+        int newX = Calc.multiplyAndRound(x, scaleX);
+        int newY = Calc.multiplyAndRound(y, scaleY);
         setSize(newW, newH);
         Point origScaledLocation = getLocation();
         setBounds(origScaledLocation.x + newX, origScaledLocation.y + newY, newW, newH);
@@ -445,10 +445,10 @@ public class ScaledComponent extends JComponent {
     }
 
     public void scaleAndSetBounds(double scale){
-        int newX = (int) (this.getLocation().x * scale);
-        int newY = (int) (this.getLocation().y * scale);
-        int newWidth = (int) (this.getWidth() * scale);
-        int newHeight = (int) (this.getHeight() * scale);
+        int newX = Calc.multiplyAndRound(this.getLocation().x, scale);
+        int newY = Calc.multiplyAndRound(this.getLocation().y, scale);
+        int newWidth = Calc.multiplyAndRound(this.getWidth(), scale);
+        int newHeight = Calc.multiplyAndRound(this.getHeight(), scale);
         this.setBounds(newX, newY, newWidth, newHeight);
     }
 }

@@ -88,10 +88,10 @@ public class ScaledCanvas extends JLayeredPane {
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
                 Rectangle origBounds = sc.ic.getBounds();
-                int newX = (int) (origBounds.x * scale);
-                int newY = (int) (origBounds.y * scale);
-                int newWidth = (int) (origBounds.getWidth() * scale);
-                int newHeight = (int) (origBounds.getHeight() * scale);
+                int newX = Calc.multiplyAndRound(origBounds.x, scale);
+                int newY = Calc.multiplyAndRound(origBounds.y, scale);
+                int newWidth = Calc.multiplyAndRound(origBounds.getWidth(), scale);
+                int newHeight = Calc.multiplyAndRound(origBounds.getHeight(), scale);
                 comp.setBounds(newX, newY, newWidth, newHeight);
             }
         }

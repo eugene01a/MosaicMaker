@@ -34,15 +34,15 @@ public class ImageComponent extends JComponent {
         int dx = bounds.x - startLoc.x;
         int dy = bounds.y - startLoc.y;
         double scale = bounds.getWidth() / getWidth();
-        int unscaledDx = (int) Math.round(dx / scale);
-        int unscaledDy = (int) Math.round(dy / scale);
+        int unscaledDx = Calc.divideAndRound(dx, scale);
+        int unscaledDy = Calc.divideAndRound(dy, scale);
         Point newUnscaledLocation = new Point(getX() + unscaledDx, getY() + unscaledDy);
         setLocation(newUnscaledLocation);
     }
     public void resize(double scale){
         Rectangle unscaledBounds = getBounds();
-        int resizedUnscaledWidth = (int) Math.round(unscaledBounds.width * scale);
-        int resizedUnscaledHeight = (int) Math.round(unscaledBounds.height * scale);
+        int resizedUnscaledWidth = Calc.multiplyAndRound(unscaledBounds.width, scale);
+        int resizedUnscaledHeight = Calc.multiplyAndRound(unscaledBounds.height, scale);
         Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
         setSize(resizedUnscaledDim);
     }
