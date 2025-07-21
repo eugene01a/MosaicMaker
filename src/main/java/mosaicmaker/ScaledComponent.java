@@ -341,6 +341,7 @@ public class ScaledComponent extends JComponent {
         int cropRectY = cropRect.y;
         int cropRectW = cropRect.width;
         int cropRectH = cropRect.height;
+
         if (cropRect.x < 0){
             cropRectW += cropRect.x;
             cropRectX = 0;
@@ -350,28 +351,29 @@ public class ScaledComponent extends JComponent {
             cropRectY = 0;
         }
 
-        double scaleX = (double) getWidth() / image.getWidth();
-        double scaleY = (double) getHeight() / image.getHeight();
-        int x = Calc.multiplyAndRound(cropRectX, (image.getWidth() / (double) getWidth()));
-        int y = Calc.multiplyAndRound(cropRectY, (image.getHeight() / (double) getHeight()));
-        int w = Calc.multiplyAndRound(cropRectW, (image.getWidth() / (double) getWidth()));
-        int h = Calc.multiplyAndRound(cropRectH, (image.getHeight() / (double) getHeight()));
+        if (cropRectW + cropRectX > getWidth()) {
+            cropRectW = getWidth() - cropRectX;
+        }
+        if (cropRectH + cropRectY > getHeight()) {
+            cropRectH = getHeight() - cropRectY;
+        }
 
-        // Clamp to image bounds
-        x = Math.max(0, Math.min(x, image.getWidth() - 1));
-        y = Math.max(0, Math.min(y, image.getHeight() - 1));
-        w = Math.max(1, Math.min(w, image.getWidth() - x));
-        h = Math.max(1, Math.min(h, image.getHeight() - y));
+        int sc_x=cropRectX+getX();
+        int sc_y=cropRectY+getY();
+        double ic_scale = getSize().getWidth() / ic.getSize().getWidth();
+        int ic_crop_x = Calc.divideAndRound(sc_x, ic_scale) - ic.getX();
+        int ic_crop_y = Calc.divideAndRound(sc_y, ic_scale) - ic.getY();
+        int ic_crop_w = Calc.divideAndRound(cropRectW, ic_scale);
+        int ic_crop_h = Calc.divideAndRound(cropRectH, ic_scale);
+        ic.crop(ic_crop_x, ic_crop_y, ic_crop_w, ic_crop_h);
 
-        ic.crop(x, y, w, h);
-
-        int newW = Calc.multiplyAndRound(w, scaleX);
-        int newH = Calc.multiplyAndRound(h, scaleY);
-        int newX = Calc.multiplyAndRound(x, scaleX);
-        int newY = Calc.multiplyAndRound(y, scaleY);
-        setSize(newW, newH);
-        Point origScaledLocation = getLocation();
-        setBounds(origScaledLocation.x + newX, origScaledLocation.y + newY, newW, newH);
+        Rectangle origBounds = ic.getBounds();
+        int newX = Calc.multiplyAndRound(origBounds.x, ic_scale);
+        int newY = Calc.multiplyAndRound(origBounds.y, ic_scale);
+        int newWidth = Calc.multiplyAndRound(origBounds.getWidth(), ic_scale);
+        int newHeight = Calc.multiplyAndRound(origBounds.getHeight(), ic_scale);
+        setBounds(newX, newY, newWidth, newHeight);
+        revalidate();
         repaint();
     }
 

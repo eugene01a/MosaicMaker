@@ -17,10 +17,21 @@ public class ImageComponent extends JComponent {
 
     public void crop(int x, int y, int w, int h) {
         Point origImageLocation = getLocation();
+        double img_scale = getSize().getWidth() / image.getWidth();
+        if ((x+w)/img_scale > image.getWidth()) {
+            w = (int) (image.getWidth()*img_scale-x);
+        }
+        if ((y+h)/img_scale > image.getHeight()){
+            h = (int) (image.getHeight()*img_scale -y);
+        }
 
-        // Get cropped image
-        BufferedImage cropped = image.getSubimage(x, y, w, h);
+        BufferedImage cropped = image.getSubimage(
+                Calc.divideAndRound(x, img_scale),
+                Calc.divideAndRound(y, img_scale),
+                Calc.divideAndRound(w, img_scale),
+                Calc.divideAndRound(h, img_scale));
         BufferedImage copy = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+
         Graphics2D g2 = copy.createGraphics();
         g2.drawImage(cropped, 0, 0, null);
         g2.dispose();
