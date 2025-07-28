@@ -31,7 +31,7 @@ public class ScaledCanvas extends JLayeredPane {
         try {
             BufferedImage img = ImageIO.read(fileToOpen);
             if (img != null) {
-                ScaledComponent sc = new ScaledComponent(img);
+                ScaledComponent sc = new ScaledComponent(img, fileToOpen.getName());
                 sc.scaleAndSetBounds(scale);
                 add(sc);
                 this.setComponentZOrder(sc, 0);

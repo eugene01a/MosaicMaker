@@ -8,6 +8,7 @@ import static mosaicmaker.AppDefaults.*;
 public class ScaledComponent extends JComponent {
 
     public ImageComponent ic;
+    public String name;
     private boolean resizing = false;
     private Corner resizingCorner;
     private Point resizingStart;
@@ -37,28 +38,23 @@ public class ScaledComponent extends JComponent {
 
     public BufferedImage resizedImage(){
         BufferedImage image = ic.getImage();
-        if (resizedScale == 1.0) {
-            return image;
-        } else {
-            int newWidth = Calc.multiplyAndRound(image.getWidth(), resizedScale);
-            int newHeight = Calc.multiplyAndRound(image.getHeight(), resizedScale);
-            BufferedImage scaledImage = new BufferedImage(newWidth, newHeight, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g2d = scaledImage.createGraphics();
+        BufferedImage scaledImage = new BufferedImage(ic.getWidth(), ic.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = scaledImage.createGraphics();
 
-            g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-            g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-            g2d.drawImage(image, 0, 0, newWidth, newHeight, null);
-            g2d.dispose();
-            return scaledImage;
-        }
+        g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+        g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.drawImage(image, 0, 0, ic.getWidth(), ic.getHeight(), null);
+        g2d.dispose();
+        return scaledImage;
     }
 
     public Point getStartLocation() {
         return startLocation;
     }
 
-    public ScaledComponent(BufferedImage image) {
+    public ScaledComponent(BufferedImage image, String name) {
+        this.name = name;
         ic = new ImageComponent(image);
         setBounds(ic.getBounds());
         enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
@@ -220,13 +216,13 @@ public class ScaledComponent extends JComponent {
         JLayeredPane canvas = (JLayeredPane) getParent();
 
         BufferedImage left = image.getSubimage(0, 0, imgSplitX, image.getHeight());
-        ScaledComponent leftComponent = new ScaledComponent(left);
+        ScaledComponent leftComponent = new ScaledComponent(left, this.name + "_left");
         leftComponent.setBounds(getX(), getY(), splitX, getHeight());
         canvas.add(leftComponent, JLayeredPane.DEFAULT_LAYER);
         leftComponent.ic.setLocation(this.ic.getLocation());
 
         BufferedImage right = image.getSubimage(imgSplitX, 0, image.getWidth() - imgSplitX, image.getHeight());
-        ScaledComponent rightComponent = new ScaledComponent(right);
+        ScaledComponent rightComponent = new ScaledComponent(right, this.name+"_right");
         rightComponent.setBounds(getX() + splitX, getY(), getWidth() - splitX, getHeight());
         canvas.add(rightComponent, JLayeredPane.DEFAULT_LAYER);
         rightComponent.ic.setLocation(
@@ -279,11 +275,11 @@ public class ScaledComponent extends JComponent {
 
         JLayeredPane canvas = (JLayeredPane) getParent();
 
-        ScaledComponent topComponent = new ScaledComponent(top);
+        ScaledComponent topComponent = new ScaledComponent(top, this.name + "_top");
         topComponent.setBounds(getX(), getY(), getWidth(), topHeight);
         canvas.add(topComponent, JLayeredPane.DEFAULT_LAYER);
 
-        ScaledComponent bottomComponent = new ScaledComponent(bottom);
+        ScaledComponent bottomComponent = new ScaledComponent(bottom, this.name + "_bottom");
         bottomComponent.setBounds(getX(), getY() + splitY, getWidth(), bottomHeight);
         bottomComponent.ic.setLocation(
                 new Point(0, this.ic.getLocation().y + imgSplitY));
