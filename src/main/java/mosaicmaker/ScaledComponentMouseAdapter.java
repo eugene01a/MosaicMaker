@@ -29,15 +29,13 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
                 sc.setDraggingSplitLine(true);
             }
             return;
-        }
-        else if (sc.isVerticalSplitMode()) {
+        } else if (sc.isVerticalSplitMode()) {
             Rectangle lineBounds = new Rectangle(sc.getVerticalSplitX() - 5, 0, 10, sc.getHeight());
             if (lineBounds.contains(e.getPoint())) {
                 sc.setDraggingVerticalSplitLine(true);
             }
             return;
-        }
-        else if (sc.isCropMode()) {
+        } else if (sc.isCropMode()) {
             sc.setCropStart(e.getPoint());
             sc.setCropRect(new Rectangle(sc.getCropStart()));
             sc.repaint();
@@ -56,8 +54,8 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             sc.setResizingCorner(Corner.TOP_LEFT);
             sc.setResizing(true);
             sc.setResizeStartSizeToCurrent();
-            int startX = sc.getX()+e.getPoint().x;
-            int startY = sc.getY()+e.getPoint().y;
+            int startX = sc.getX() + e.getPoint().x;
+            int startY = sc.getY() + e.getPoint().y;
             sc.setResizingStart(new Point(startX, startY));
 
         } else if (resizeBottomRightHandle.contains(e.getPoint())) {
@@ -68,8 +66,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         } else {
             // Move mode
             sc.setResizing(false);
-            sc.setDragOffset(e.getPoint());
-            sc.setStartLocation(sc.getLocation());
+            sc.setDragOffset(e.getPoint());sc.setStartLocation(sc.getLocation());
 
         }
     }
@@ -98,7 +95,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             return;
         }
         if (sc.isResizing()) {
-            if (sc.ic != null && sc.ic.getHeight() != 0) {
+            if (sc.getImageHeight() != 0) {
                 process_resize_drag_event(e);
             }
         } else {
@@ -108,7 +105,7 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             int y = parentPoint.y - sc.getDragOffset().y;
 
             int gridSize = AppDefaults.GRID_SIZE;
-            int snapThreshold = 10;
+            int snapThreshold = SNAP_THRESHOLD;
 
             int snappedX = (x + gridSize / 2) / gridSize * gridSize;
             int snappedY = (y + gridSize / 2) / gridSize * gridSize;
@@ -122,15 +119,16 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
 
                     Rectangle r = comp.getBounds();
 
-                    if (Math.abs(x - r.x) < snapThreshold) snappedX = r.x;
-                    if (Math.abs(x + width - r.x) < snapThreshold) snappedX = r.x - width;
-                    if (Math.abs(x - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width;
-                    if (Math.abs(x + width - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width - width;
+                    if (Math.abs(snappedX - r.x) < snapThreshold) snappedX = r.x;
+                    if (Math.abs(snappedX + width - r.x) < snapThreshold) snappedX = r.x - width;
+                    if (Math.abs(snappedX - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width;
+                    if (Math.abs(snappedX + width - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width - width;
 
-                    if (Math.abs(y - r.y) < snapThreshold) snappedY = r.y;
-                    if (Math.abs(y + height - r.y) < snapThreshold) snappedY = r.y - height;
-                    if (Math.abs(y - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height;
-                    if (Math.abs(y + height - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height - height;
+                    if (Math.abs(snappedY - r.y) < snapThreshold) snappedY = r.y;
+                    if (Math.abs(snappedY + height - r.y) < snapThreshold) snappedY = r.y - height;
+                    if (Math.abs(snappedY - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height;
+                    if (Math.abs(snappedY + height - (r.y + r.height)) < snapThreshold)
+                        snappedY = r.y + r.height - height;
                 }
             }
 
@@ -167,7 +165,8 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         if (sc.getStartLocation() != null && (sc.getLocation().x != sc.getStartLocation().x || sc.getLocation().y != sc.getStartLocation().y)) {
             // Move mode
             Point start = sc.getStartLocation();
-            sc.ic.setLocationFromScaledMove(sc.getBounds(), start);
+            Point end = sc.getLocation();
+            sc.setLocationFromScaledMove(start, end);
             sc.setStartLocation(sc.getLocation());
         }
     }
@@ -181,10 +180,8 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
         if (sc.isCropMode()) return;
         Corner c = sc.getCornerUnderPoint(e.getPoint());
         switch (c) {
-            case TOP_LEFT, BOTTOM_RIGHT ->
-                    sc.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
-            case TOP_RIGHT, BOTTOM_LEFT ->
-                    sc.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
+            case TOP_LEFT, BOTTOM_RIGHT -> sc.setCursor(Cursor.getPredefinedCursor(Cursor.NW_RESIZE_CURSOR));
+            case TOP_RIGHT, BOTTOM_LEFT -> sc.setCursor(Cursor.getPredefinedCursor(Cursor.NE_RESIZE_CURSOR));
             default -> sc.setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
         }
     }
@@ -204,33 +201,33 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
     public void process_resize_release_event(MouseEvent e) {
         if (sc.getResizingCorner() == Corner.TOP_LEFT) {
             //TODO
-        }
-        else {
+        } else {
             // Compute uniform scale factor
             int oldScaledWidth = sc.getResizeStartSize().width;
             Dimension newScaledDim = computeBRResizedDim(e);
             double scale = (double) newScaledDim.width / oldScaledWidth;
 
             // Scale the image component bounds
-            sc.ic.resize(scale);
+            sc.resizeImage(scale);
             sc.setResizedScale(scale);
         }
     }
+
     public void process_resize_drag_event(MouseEvent e) {
         if (sc.getResizingCorner() == Corner.TOP_LEFT) {
             Rectangle newbounds = computeTLResizedBounds(e);
             sc.setBounds(newbounds);
-        }
-        else {
+        } else {
             Dimension newDim = computeBRResizedDim(e);
             sc.setSize(newDim.width, newDim.height);
         }
+        sc.snapImageBoundsToOtherImages();
         sc.revalidate();
         sc.repaint();
     }
 
     public Rectangle computeTLResizedBounds(MouseEvent e) {
-        float aspectRatio = (float) sc.ic.getWidth() / sc.ic.getHeight();
+        float aspectRatio = (float) sc.getImageWidth() / sc.getImageHeight();
 
         // Convert current mouse point to parent coordinates
         Point current = SwingUtilities.convertPoint(sc, e.getPoint(), sc.getParent());
@@ -251,16 +248,44 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             newScaledHeight = Calc.divideAndRound(rawNewWidth, aspectRatio);
         }
 
-        // Pin the bottom-right corner based on original bounds
+        // Compute un-snapped top-left
         int newX = start.x + originalSize.width - newScaledWidth;
         int newY = start.y + originalSize.height - newScaledHeight;
 
-        return new Rectangle(newX, newY, newScaledWidth, newScaledHeight);
+        // Snap the top-left corner
+        int gridSize = AppDefaults.GRID_SIZE;
+        int snapThreshold = SNAP_THRESHOLD;
+
+        int snappedX = Math.round((float) newX / gridSize) * gridSize;
+        int snappedY = Math.round((float) newY / gridSize) * gridSize;
+
+        if (sc.getParent() instanceof ScaledCanvas canvas) {
+            for (Component comp : canvas.getComponents()) {
+                if (comp == sc) continue;
+
+                Rectangle r = comp.getBounds();
+
+                if (Math.abs(snappedX - r.x) < snapThreshold) snappedX = r.x;
+                if (Math.abs(snappedX + newScaledWidth - r.x) < snapThreshold) snappedX = r.x - newScaledWidth;
+                if (Math.abs(snappedX - (r.x + r.width)) < snapThreshold) snappedX = r.x + r.width;
+                if (Math.abs(snappedX + newScaledWidth - (r.x + r.width)) < snapThreshold)
+                    snappedX = r.x + r.width - newScaledWidth;
+
+                if (Math.abs(snappedY - r.y) < snapThreshold) snappedY = r.y;
+                if (Math.abs(snappedY + newScaledHeight - r.y) < snapThreshold) snappedY = r.y - newScaledHeight;
+                if (Math.abs(snappedY - (r.y + r.height)) < snapThreshold) snappedY = r.y + r.height;
+                if (Math.abs(snappedY + newScaledHeight - (r.y + r.height)) < snapThreshold)
+                    snappedY = r.y + r.height - newScaledHeight;
+            }
+        }
+
+        return new Rectangle(snappedX, snappedY, newScaledWidth, newScaledHeight);
     }
 
 
     public Dimension computeBRResizedDim(MouseEvent e) {
-        float aspectRatio = (float) sc.ic.getWidth() / sc.ic.getHeight();
+        float aspectRatio = (float) sc.getImageWidth() / sc.getImageHeight();
+
         // Raw mouse input
         int rawNewWidth = Math.max(20, e.getX());
         int rawNewHeight = Math.max(20, e.getY());
@@ -274,6 +299,46 @@ public class ScaledComponentMouseAdapter extends MouseAdapter {
             newScaledWidth = rawNewWidth;
             newScaledHeight = Calc.divideAndRound(rawNewWidth, aspectRatio);
         }
-        return new Dimension(newScaledWidth, newScaledHeight);
+
+        // Snap bottom-right corner to grid and other components
+        int gridSize = AppDefaults.GRID_SIZE;
+        int snapThreshold = SNAP_THRESHOLD;
+
+        int currentX = sc.getX();
+        int currentY = sc.getY();
+        int rawBRx = currentX + newScaledWidth;
+        int rawBRy = currentY + newScaledHeight;
+
+        int snappedBRx = Math.round((float) rawBRx / gridSize) * gridSize;
+        int snappedBRy = Math.round((float) rawBRy / gridSize) * gridSize;
+
+        if (sc.getParent() instanceof ScaledCanvas canvas) {
+            for (Component comp : canvas.getComponents()) {
+                if (comp == sc) continue;
+
+                Rectangle r = comp.getBounds();
+
+                if (Math.abs(snappedBRx - r.x) < snapThreshold) snappedBRx = r.x;
+                if (Math.abs(snappedBRx - (r.x + r.width)) < snapThreshold) snappedBRx = r.x + r.width;
+
+                if (Math.abs(snappedBRy - r.y) < snapThreshold) snappedBRy = r.y;
+                if (Math.abs(snappedBRy - (r.y + r.height)) < snapThreshold) snappedBRy = r.y + r.height;
+            }
+        }
+
+        // Convert snapped bottom-right corner back to width/height
+        int snappedWidth = Math.max(20, snappedBRx - currentX);
+        int snappedHeight = Math.max(20, snappedBRy - currentY);
+
+        // Re-adjust for aspect ratio again
+        if (snappedWidth / (float) snappedHeight > aspectRatio) {
+            snappedHeight = Math.max(20, snappedHeight);
+            snappedWidth = Calc.multiplyAndRound(snappedHeight, aspectRatio);
+        } else {
+            snappedWidth = Math.max(20, snappedWidth);
+            snappedHeight = Calc.divideAndRound(snappedWidth, aspectRatio);
+        }
+
+        return new Dimension(snappedWidth, snappedHeight);
     }
 }

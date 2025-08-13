@@ -13,8 +13,8 @@ public class ScaledCanvas extends JLayeredPane {
     @Override
     public void remove(Component comp) {
         if (comp == selectedComponent) {
-            selectedComponent = null; // Clear selection if removed
-            updateEditMenu(); // Update menu state
+            selectedComponent = null;
+            updateEditMenu();
         }
         super.remove(comp);
     }
@@ -87,12 +87,13 @@ public class ScaledCanvas extends JLayeredPane {
     public void updateChildrenBounds() {
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Rectangle origBounds = sc.ic.getBounds();
-                int newX = Calc.multiplyAndRound(origBounds.x, scale);
-                int newY = Calc.multiplyAndRound(origBounds.y, scale);
-                int newWidth = Calc.multiplyAndRound(origBounds.getWidth(), scale);
-                int newHeight = Calc.multiplyAndRound(origBounds.getHeight(), scale);
-                comp.setBounds(newX, newY, newWidth, newHeight);
+                int newX = Calc.multiplyAndRound(sc.getImageX(), scale);
+                int newY = Calc.multiplyAndRound(sc.getImageY(), scale);
+                int newWidth = Calc.multiplyAndRound(sc.getImageWidth(), scale);
+                int newHeight = Calc.multiplyAndRound(sc.getImageHeight(), scale);
+                sc.setBounds(newX, newY, newWidth, newHeight);
+                sc.snapBounds();
+                sc.snapImageBoundsToOtherImages();
             }
         }
         updatePreferredSize();
@@ -113,7 +114,7 @@ public class ScaledCanvas extends JLayeredPane {
         Rectangle bounds = null;
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Rectangle ic_bounds = sc.ic.getBounds();
+                Rectangle ic_bounds = sc.getImageBounds();
                 if (bounds == null) {
                     bounds = ic_bounds;
                 } else {
@@ -180,10 +181,9 @@ public class ScaledCanvas extends JLayeredPane {
     public void shiftUnscaledContentBounds(Point unscaledLocation) {
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Rectangle origBounds = sc.ic.getBounds();
-                int newX = origBounds.x + unscaledLocation.x;
-                int newY = origBounds.y + unscaledLocation.y;
-                sc.ic.setLocation(new Point(newX, newY));
+                int newX = sc.getImageX() + unscaledLocation.x;
+                int newY = sc.getImageY() + unscaledLocation.y;
+                sc.imageLocation = new Point(newX, newY);
             }
         }
         updatePreferredSize();
@@ -197,8 +197,7 @@ public class ScaledCanvas extends JLayeredPane {
         Graphics2D g2d = mosaic.createGraphics();
         for (Component comp : getComponents()) {
             if (comp instanceof ScaledComponent sc) {
-                Point location = sc.ic.getLocation();
-                g2d.drawImage(sc.resizedImage(), location.x, location.y, null);
+                g2d.drawImage(sc.resizedImage(), sc.getImageX(), sc.getImageY(), null);
             }
         }
         g2d.dispose();

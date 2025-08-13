@@ -62,6 +62,7 @@ public class MosaicMaker {
                             support.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
                     for (File file : files) {
                         canvas.addImageToCanvas(file);
+                        zoomToFit();
                     }
                     return true;
                 } catch (Exception ex) {

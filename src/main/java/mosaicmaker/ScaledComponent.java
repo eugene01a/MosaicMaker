@@ -7,7 +7,31 @@ import static mosaicmaker.AppDefaults.*;
 
 public class ScaledComponent extends JComponent {
 
-    public ImageComponent ic;
+    private BufferedImage image;
+    public Point imageLocation;
+    public Dimension imageDimension;
+    public Rectangle getImageBounds(){
+        return new Rectangle(imageLocation.x, imageLocation.y, imageDimension.width, imageDimension.height);
+    }
+    public void setImageBounds(int x, int y, int width, int height){
+        imageLocation.x = x;
+        imageLocation.y = y;
+        imageDimension.width = width;
+        imageDimension.height = height;
+
+    }
+    public int getImageWidth(){
+        return imageDimension.width;
+    };
+    public int getImageHeight(){
+        return imageDimension.height;
+    };
+    public int getImageX(){
+        return imageLocation.x;
+    }
+    public int getImageY(){
+        return imageLocation.y;
+    }
     public String name;
     private boolean resizing = false;
     private Corner resizingCorner;
@@ -37,14 +61,13 @@ public class ScaledComponent extends JComponent {
     }
 
     public BufferedImage resizedImage(){
-        BufferedImage image = ic.getImage();
-        BufferedImage scaledImage = new BufferedImage(ic.getWidth(), ic.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        BufferedImage scaledImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = scaledImage.createGraphics();
 
         g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2d.drawImage(image, 0, 0, ic.getWidth(), ic.getHeight(), null);
+        g2d.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
         g2d.dispose();
         return scaledImage;
     }
@@ -55,8 +78,11 @@ public class ScaledComponent extends JComponent {
 
     public ScaledComponent(BufferedImage image, String name) {
         this.name = name;
-        ic = new ImageComponent(image);
-        setBounds(ic.getBounds());
+        this.image = image;
+        Rectangle imgBounds = new Rectangle(0,0,image.getWidth(), image.getHeight());
+        this.imageLocation = new Point(0,0);
+        this.imageDimension = new Dimension(image.getWidth(), image.getHeight());
+        setBounds(imgBounds);
         enableEvents(AWTEvent.MOUSE_EVENT_MASK | AWTEvent.MOUSE_MOTION_EVENT_MASK);
         ScaledComponentMouseAdapter mouseAdapter = new ScaledComponentMouseAdapter(this);
         addMouseListener(mouseAdapter);
@@ -203,7 +229,6 @@ public class ScaledComponent extends JComponent {
     }
 
     private void performVerticalSplit(int splitX) {
-        BufferedImage image = ic.getImage();
         if (image == null || getParent() == null) return;
 
         double scaleX = (double) image.getWidth() / getWidth();
@@ -219,14 +244,14 @@ public class ScaledComponent extends JComponent {
         ScaledComponent leftComponent = new ScaledComponent(left, this.name + "_left");
         leftComponent.setBounds(getX(), getY(), splitX, getHeight());
         canvas.add(leftComponent, JLayeredPane.DEFAULT_LAYER);
-        leftComponent.ic.setLocation(this.ic.getLocation());
+        leftComponent.imageLocation =this.imageLocation;
 
         BufferedImage right = image.getSubimage(imgSplitX, 0, image.getWidth() - imgSplitX, image.getHeight());
         ScaledComponent rightComponent = new ScaledComponent(right, this.name+"_right");
         rightComponent.setBounds(getX() + splitX, getY(), getWidth() - splitX, getHeight());
         canvas.add(rightComponent, JLayeredPane.DEFAULT_LAYER);
-        rightComponent.ic.setLocation(
-                new Point(this.ic.getLocation().x + imgSplitX, 0));
+        rightComponent.imageLocation =
+                new Point(this.getImageX() + imgSplitX, 0);
 
         canvas.remove(this);
         canvas.repaint();
@@ -259,7 +284,6 @@ public class ScaledComponent extends JComponent {
     }
 
     private void performHorizontalSplit(int splitY) {
-        BufferedImage image = ic.getImage();
         if (image == null || getParent() == null) return;
         double scaleY = (double) image.getHeight() / getHeight();
         int imgSplitY = Calc.multiplyAndRound(splitY, scaleY);
@@ -281,8 +305,8 @@ public class ScaledComponent extends JComponent {
 
         ScaledComponent bottomComponent = new ScaledComponent(bottom, this.name + "_bottom");
         bottomComponent.setBounds(getX(), getY() + splitY, getWidth(), bottomHeight);
-        bottomComponent.ic.setLocation(
-                new Point(0, this.ic.getLocation().y + imgSplitY));
+        bottomComponent.imageLocation =
+                new Point(0, this.getImageY() + imgSplitY);
         canvas.add(bottomComponent, JLayeredPane.DEFAULT_LAYER);
 
         canvas.remove(this);
@@ -331,7 +355,6 @@ public class ScaledComponent extends JComponent {
     }
 
     private void performCrop() {
-        BufferedImage image = ic.getImage();
         if (cropRect == null || image == null) return;
         int cropRectX = cropRect.x;
         int cropRectY = cropRect.y;
@@ -356,14 +379,15 @@ public class ScaledComponent extends JComponent {
 
         int sc_x=cropRectX+getX();
         int sc_y=cropRectY+getY();
-        double ic_scale = getSize().getWidth() / ic.getSize().getWidth();
-        int ic_crop_x = Calc.divideAndRound(sc_x, ic_scale) - ic.getX();
-        int ic_crop_y = Calc.divideAndRound(sc_y, ic_scale) - ic.getY();
-        int ic_crop_w = Calc.divideAndRound(cropRectW, ic_scale);
-        int ic_crop_h = Calc.divideAndRound(cropRectH, ic_scale);
-        ic.crop(ic_crop_x, ic_crop_y, ic_crop_w, ic_crop_h);
+        double ic_scale = getSize().getWidth() / getImageWidth();
 
-        Rectangle origBounds = ic.getBounds();
+        cropImage(
+                Calc.divideAndRound(sc_x, ic_scale) - getImageX(),
+                Calc.divideAndRound(sc_y, ic_scale) - getImageY(),
+                Calc.divideAndRound(cropRectW, ic_scale),
+                Calc.divideAndRound(cropRectH, ic_scale));
+
+        Rectangle origBounds = getImageBounds();
         int newX = Calc.multiplyAndRound(origBounds.x, ic_scale);
         int newY = Calc.multiplyAndRound(origBounds.y, ic_scale);
         int newWidth = Calc.multiplyAndRound(origBounds.getWidth(), ic_scale);
@@ -389,7 +413,6 @@ public class ScaledComponent extends JComponent {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        BufferedImage image = ic.getImage();
         // Draw image scaled to current size
         g.drawImage(image, 0, 0, getWidth(), getHeight(), this);
 
@@ -448,5 +471,138 @@ public class ScaledComponent extends JComponent {
         int newWidth = Calc.multiplyAndRound(this.getWidth(), scale);
         int newHeight = Calc.multiplyAndRound(this.getHeight(), scale);
         this.setBounds(newX, newY, newWidth, newHeight);
+    }
+
+    public void setLocationFromScaledMove(Point startLoc, Point endLoc) {
+        int dx = endLoc.x - startLoc.x;
+        int dy = endLoc.y - startLoc.y;
+        double scale = (double) getWidth() / getImageWidth();
+        int imageDx = Calc.divideAndRound(dx * getImageWidth(), getWidth());
+        int imageDy = Calc.divideAndRound(dy, scale);
+        imageLocation = new Point(getImageX() + imageDx, getImageY() + imageDy);
+        snapImageBoundsToOtherImages();
+    }
+
+    public void resizeImage(double scale){
+        int resizedUnscaledWidth = Calc.multiplyAndRound(getImageWidth(), scale);
+        int resizedUnscaledHeight = Calc.multiplyAndRound(getImageHeight(), scale);
+        Dimension resizedUnscaledDim = new Dimension(resizedUnscaledWidth, resizedUnscaledHeight);
+        imageDimension = resizedUnscaledDim;
+    }
+
+    public void cropImage(int x, int y, int w, int h) {
+        double img_scale = (double) getImageWidth() / image.getWidth();
+
+        // Convert scaled values to raw image-space coordinates
+        int ix = Calc.divideAndRound(x, img_scale);
+        int iy = Calc.divideAndRound(y, img_scale);
+        int iw = Calc.divideAndRound(w, img_scale);
+        int ih = Calc.divideAndRound(h, img_scale);
+
+        // Clamp negative positions
+        if (ix < 0) {
+            iw += ix;
+            ix = 0;
+        }
+        if (iy < 0) {
+            ih += iy;
+            iy = 0;
+        }
+
+        // Clamp to image bounds
+        if (ix + iw > image.getWidth()) {
+            iw = image.getWidth() - ix;
+        }
+        if (iy + ih > image.getHeight()) {
+            ih = image.getHeight() - iy;
+        }
+
+        // Final safety check
+        iw = Math.max(iw, 1);
+        ih = Math.max(ih, 1);
+
+        BufferedImage cropped = image.getSubimage(ix, iy, iw, ih);
+        BufferedImage copy = new BufferedImage(iw, ih, BufferedImage.TYPE_INT_ARGB);
+
+        Graphics2D g2 = copy.createGraphics();
+        g2.drawImage(cropped, 0, 0, null);
+        g2.dispose();
+
+        // Replace image, preserve scaling logic
+        image = copy;
+
+        // Note: this still uses x, y, w, h in scaled space for image bounds
+        setImageBounds(getImageX() + x, getImageY() + y, w, h);
+    }
+
+
+    public void snapImageBoundsToOtherImages() {
+        if (getParent() == null) return;
+
+        int snapThreshold = AppDefaults.SNAP_THRESHOLD;
+
+        int imgX = imageLocation.x;
+        int imgY = imageLocation.y;
+        int imgW = imageDimension.width;
+        int imgH = imageDimension.height;
+
+        //Snap to other images
+        if (getParent() instanceof ScaledCanvas canvas) {
+            for (Component comp : canvas.getComponents()) {
+                if (comp == this || !(comp instanceof ScaledComponent other)) continue;
+
+                Rectangle r = other.getImageBounds();
+                if (r == null) continue;
+
+                if (Math.abs(imgX - r.x) < snapThreshold) imgX = r.x;
+                if (Math.abs(imgX + imgW - r.x) < snapThreshold) imgX = r.x - imgW;
+                if (Math.abs(imgX - (r.x + r.width)) < snapThreshold) imgX = r.x + r.width;
+                if (Math.abs(imgX + imgW - (r.x + r.width)) < snapThreshold) imgX = r.x + r.width - imgW;
+
+                if (Math.abs(imgY - r.y) < snapThreshold) imgY = r.y;
+                if (Math.abs(imgY + imgH - r.y) < snapThreshold) imgY = r.y - imgH;
+                if (Math.abs(imgY - (r.y + r.height)) < snapThreshold) imgY = r.y + r.height;
+                if (Math.abs(imgY + imgH - (r.y + r.height)) < snapThreshold) imgY = r.y + r.height - imgH;
+            }
+        }
+
+        // Translate back to component-local coordinates
+        setImageBounds(imgX, imgY, imgW, imgH);
+        repaint();
+    }
+
+    public void snapBounds() {
+        if (getParent() == null) return;
+
+        int snapThreshold = AppDefaults.SNAP_THRESHOLD;
+
+        int x = getX();
+        int y = getY();
+        int w = getWidth();
+        int h = getHeight();
+
+        //Snap to other images
+        if (getParent() instanceof ScaledCanvas canvas) {
+            for (Component comp : canvas.getComponents()) {
+                if (comp == this || !(comp instanceof ScaledComponent other)) continue;
+
+                Rectangle r = other.getBounds();
+                if (r == null) continue;
+
+                if (Math.abs(x - r.x) < snapThreshold) x = r.x;
+                if (Math.abs(x + w - r.x) < snapThreshold) x = r.x - w;
+                if (Math.abs(x - (r.x + r.width)) < snapThreshold) x = r.x + r.width;
+                if (Math.abs(x + w - (r.x + r.width)) < snapThreshold) x = r.x + r.width - w;
+
+                if (Math.abs(y - r.y) < snapThreshold) y = r.y;
+                if (Math.abs(y + h - r.y) < snapThreshold) y = r.y - h;
+                if (Math.abs(y - (r.y + r.height)) < snapThreshold) y = r.y + r.height;
+                if (Math.abs(y + h - (r.y + r.height)) < snapThreshold) y = r.y + r.height - h;
+            }
+        }
+
+        // Translate back to component-local coordinates
+        setBounds(x, y, w, h);
+        repaint();
     }
 }
