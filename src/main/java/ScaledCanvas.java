@@ -176,12 +176,18 @@ public class ScaledCanvas extends JLayeredPane {
 
     public BufferedImage createUnscaledMosaicImage() {
         Rectangle unscaledBounds = getUnscaledImagesBounds();
+        if (unscaledBounds.width == 0 || unscaledBounds.height == 0) {
+            // Avoid creating a zero-sized image when saving an empty canvas.
+            return new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+        }
         BufferedImage mosaic = new BufferedImage(unscaledBounds.width, unscaledBounds.height, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = mosaic.createGraphics();
-        for (Component comp : getComponents()) {
+        // Export relative to the collage origin, not absolute canvas coordinates.
+        for (int i = getComponentCount() - 1; i >= 0; i--) {
+            Component comp = getComponent(i);
             if (comp instanceof ScaledComponent ic) {
                 Point location = ic.getImageLocation();
-                g2d.drawImage(ic.resizedImage(), location.x, location.y, null);
+                g2d.drawImage(ic.resizedImage(), location.x - unscaledBounds.x, location.y - unscaledBounds.y, null);
             }
         }
         g2d.dispose();

@@ -51,4 +51,18 @@ public class ScaledCanvasTest {
         assertEquals(imageWidth, comp.getWidth(), "Initial Component Width should match the original image");
         assertEquals(imageHeight, comp.getHeight(), "Initial Component Height should match the original image");
     }
+
+    @Test
+    public void testExportOffsetsImagesByCollageBounds() {
+        // Saving should crop to the collage bounds even when content starts away from (0,0).
+        BufferedImage image = new BufferedImage(20, 10, BufferedImage.TYPE_INT_ARGB);
+        ScaledComponent component = new ScaledComponent(image);
+        component.setImageLocation(new Point(100, 50));
+        canvas.add(component);
+
+        BufferedImage mosaic = canvas.createUnscaledMosaicImage();
+
+        assertEquals(20, mosaic.getWidth());
+        assertEquals(10, mosaic.getHeight());
+    }
 }
