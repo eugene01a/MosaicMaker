@@ -75,6 +75,7 @@ public class MosaicMaker {
             }
         });
 
+        // Drag and drop handler for adding images
         canvas.setTransferHandler(new TransferHandler() {
             public boolean canImport(TransferSupport support) {
                 return support.isDataFlavorSupported(DataFlavor.javaFileListFlavor);
@@ -88,6 +89,7 @@ public class MosaicMaker {
                             support.getTransferable().getTransferData(DataFlavor.javaFileListFlavor);
                     for (File file : files) {
                         canvas.addImageToCanvas(file);
+                        zoomToFit();
                     }
                     return true;
                 } catch (Exception ex) {
@@ -218,5 +220,6 @@ public class MosaicMaker {
             File fileToOpen = fileChooser.getSelectedFile();
             canvas.addImageToCanvas(fileToOpen);
         }
+        zoomToFit();
     }
 }
