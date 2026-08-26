@@ -124,4 +124,53 @@ class ScaledComponentMouseAdapterTest {
         assertEquals(h2, sc.getHeight());
     }
 
+    @Test
+    void testResizeTopRight() {
+        // Regression: top-right handle used to show a resize cursor but not resize.
+        BufferedImage dummyImage = new BufferedImage(100, 50, BufferedImage.TYPE_INT_RGB);
+        ScaledComponent sc = new ScaledComponent(dummyImage);
+        canvas = new ScaledCanvas();
+        canvas.add(sc);
+        sc.setLocation(20, 30);
+
+        resizeSC(sc, sc.getX() + sc.getWidth() - 1, sc.getY(), 220, -20);
+
+        assertEquals(new Point(20, -20), sc.getLocation());
+        assertEquals(new Dimension(200, 100), sc.getSize());
+    }
+
+    @Test
+    void testResizeBottomLeft() {
+        // Regression: bottom-left handle used to show a resize cursor but not resize.
+        BufferedImage dummyImage = new BufferedImage(100, 50, BufferedImage.TYPE_INT_RGB);
+        ScaledComponent sc = new ScaledComponent(dummyImage);
+        canvas = new ScaledCanvas();
+        canvas.add(sc);
+        sc.setLocation(20, 30);
+
+        resizeSC(sc, sc.getX(), sc.getY() + sc.getHeight() - 1, -80, 130);
+
+        assertEquals(new Point(-80, 30), sc.getLocation());
+        assertEquals(new Dimension(200, 100), sc.getSize());
+    }
+
+    @Test
+    void testResizeOnScaledDownCanvasPreservesUnscaledImageSize() {
+        // Resizing while zoomed out should preserve the exported image size.
+        BufferedImage dummyImage = new BufferedImage(200, 200, BufferedImage.TYPE_INT_RGB);
+        ScaledComponent sc = new ScaledComponent(dummyImage);
+        canvas = new ScaledCanvas();
+        canvas.setScale(0.5);
+        canvas.add(sc);
+        sc.scaleAndSetBounds(canvas.getScale());
+
+        resizeSC(sc, 99, 99, 50, 50);
+
+        assertEquals(new Dimension(100, 100), sc.getImageBounds().getSize());
+        assertEquals(100, sc.resizedImage().getWidth());
+        assertEquals(100, sc.resizedImage().getHeight());
+        assertEquals(100, canvas.createUnscaledMosaicImage().getWidth());
+        assertEquals(100, canvas.createUnscaledMosaicImage().getHeight());
+    }
+
 }
