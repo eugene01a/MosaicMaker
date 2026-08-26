@@ -29,6 +29,8 @@ public class ScaledCanvas extends JLayeredPane {
         try {
             BufferedImage img = ImageIO.read(fileToOpen);
             if (img != null) {
+                int orientation = ExifOrientation.readOrientation(fileToOpen);
+                img = ExifOrientation.apply(img, orientation);
                 ScaledComponent sc = new ScaledComponent(img);
                 sc.scaleAndSetBounds(scale);
                 add(sc);
